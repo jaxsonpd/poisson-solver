@@ -225,18 +225,12 @@ answered.  Emails will be quietly ignored.
 
 The reports are group reports and are to be submitted as PDF documents
 through the ENCE464 Learn page.  They will be submitted to TurnItIn
-for plagiarism checking.
+for plagiarism checking.  Use the supplied template and follow the
+instructions within.
 
 Guidelines for writing a report are available at\\
 \url{https://eng-git.canterbury.ac.nz/mph/report-guidelines/blob/master/report-guidelines.pdf}.
 
-Each report is to use a 12 point font and be no longer than eight
-pages, including appendices.  No title page please.  Please use
-margins of at least 2\,cm.
-
-%Ensure in your report that you discuss your implementation in terms of
-%cache usage and core usage.  You should present profiling information
-%showing which parts of your program takes the most time to execute.
 
 \section{Assessment}
 
@@ -258,13 +252,16 @@ Your report will be marked in terms of:
 \item Optimisation analysis.  This should discuss the affects of some
   of the compiler optimisations, such as loop unrolling, on your
   program.
-\item Overall excellence.
+\item Individual topic.  This should address an aspect of computer
+  architecture related to the assignment.  For example, using SIMD
+  instructions, using the GPU, comparing two different computers,
+  analysing branch prediction, optimisation, caching etc. in more
+  detail.  The topics must be unique per group.
 \end{itemize}
 %
-Each section is marked out of 5, giving a total of 40 marks.  Five
-bonus marks will be awarded to any group who can beat our (not very
-good) program when running on a selected ESL lab computer and give the
-correct results.
+Each section is marked equally.  Five bonus marks will be awarded to
+any group who can beat our (not very good) program when running on a
+randomly selected ESL lab computer and give the correct results.
 
 Your report should present the statistics for the time your program
 takes to run for the following problem sizes: $N=101, 201, 301, 401,
@@ -276,16 +273,10 @@ Your analyses should be backed up with experimental evidence, such as
 the output from profiling tools.
 
 
-%% Bonus marks will be awarded for implementations that handle either Dirichlet or
-%% Dirichlet boundary conditions on each boundary. This is equivalent to an
-%% insulating layer on the boundary.
-
-
 \section{Code}
 
-We expect you to use git for version control.  However, you must
-submit your code as a \code{.zip} file so it can be checked for
-numerical accuracy and plagiarism.
+We require you to use git for version control.  We will look at your
+code if we suspect plagiarism.
 
 Your fastest implementation must be an executable named \code{poisson}
 that is built by running \code{make} at the command line.  For testing
