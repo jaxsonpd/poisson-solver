@@ -33,7 +33,7 @@
 
 \begin{document}
 
-\title{\bf ENEL464 Embedded Software and Advanced Computing 2024 \\ Group Assignment 2 (draft)}
+\title{\bf ENEL464 Embedded Software and Advanced Computing 2024 \\ Group Assignment 2}
 \author{}
 %\author{Michael Hayes}
 \date{}
@@ -90,11 +90,11 @@ using Jacobi relaxation, where\footnote{You might recognise
 Here $\Delta = \Delta x = \Delta y = \Delta z$ is the spacing between
 voxels in metres, $0 \le i < N$, $0 \le j < N$, and $0 \le k < N$.
 
-Voxels on the side boundaries ($i = 0$, $i=N-1$, $j = 0$, $j=N-1$, are
-defined such that the derivative over that boundary is zero ($\partial
-V / \partial n = 0$), see Fig.~\ref{fig:Boundary}.  For example,
-consider the derivative in the x-direction, $\partial V / \partial x$.
-This can be approximated by the central difference,
+Voxels on the side boundaries ($i = 0$, $i=N-1$, $j = 0$, $j=N - 1)$,
+are defined such that the derivative over that boundary is zero
+($\partial V / \partial n = 0$), see Fig.~\ref{fig:Boundary}.  For
+example, consider the derivative in the x-direction, $\partial V /
+\partial x$.  This can be approximated by the central difference,
 %
 \begin{equation}
   \frac{V_{i+1,j,k} - V_{i-1,j,k}}{2\Delta}.
@@ -162,11 +162,6 @@ in the source code.  Some suggested reading is located in the
 \emph{docs/} folder regarding compiler optimisations, multithreading,
 and profiling.
 
-% This repository is configured for continuous integration testing on eng-git and
-% if you heavily modify the source code, you will need to modify the runner
-% instructions to match.
-
-
 Code templates can be found at
 \url{https://eng-git.canterbury.ac.nz/mph/ence464-assignment-2024}. We
 recommend writing your solutions in a Linux-like environment. This
@@ -196,6 +191,11 @@ A testing script (\code{test.sh}) has been provided along with some sample
 outputs at several cube sizes. This will automatically compare your output
 against a reference implementation.
 
+Once a correct solution has been implemented, rename
+\code{gitlab-ci.yml} to \code{.gitlab-ci.yml} to enable continuous
+integration. The pipeline will run your code against the reference
+solutions to confirm the correctness of your algorithm. Please do not
+attempt to use this for performance testing.
 
 %% There is a simple explanation of the 2-D algorithm at
 %% \url{https://blogs.msdn.microsoft.com/visualizeparallel/2010/03/29/the-jacobi-relaxation-an-instance-of-data-parallelism/}
@@ -228,8 +228,10 @@ through the ENCE464 Learn page.  They will be submitted to TurnItIn
 for plagiarism checking.  Use the supplied template and follow the
 instructions within.
 
-Guidelines for writing a report are available at\\
-\url{https://eng-git.canterbury.ac.nz/mph/report-guidelines/blob/master/report-guidelines.pdf}.
+Guidelines for writing a report are available
+at\\ \url{https://eng-git.canterbury.ac.nz/mph/report-guidelines/blob/master/report-guidelines.pdf}.
+However, no titlepage, abstract, introduction, or conclusion are
+required.
 
 
 \section{Assessment}
@@ -238,20 +240,27 @@ Your report will be marked in terms of:
 %
 \begin{itemize}
 \item Written style.  The writing should be concise technical writing.
+
 \item Presentation.  The key here is consistency and clear diagrams
   and graphs.
+
 \item Architecture overview.  This should describe your computer's
   architecture (such as the cache organisation, memory size, CPU model,
   etc.).
+
 \item Multithreading analysis.  This should discuss how your program
   takes advantage of multiple cores.
+
 \item Cache analysis.  This should discuss how your program takes
   advantage of the cache.
+
 \item Profiling analysis.  This should show which parts of your
   program take the most time.
+
 \item Optimisation analysis.  This should discuss the affects of some
   of the compiler optimisations, such as loop unrolling, on your
   program.
+
 \item Individual topic.  This should address an aspect of computer
   architecture related to the assignment.  For example, using SIMD
   instructions, using the GPU, comparing two different computers,
@@ -259,9 +268,10 @@ Your report will be marked in terms of:
   detail.  The topics must be unique per group.
 \end{itemize}
 %
-Each section is marked equally.  Five bonus marks will be awarded to
-any group who can beat our (not very good) program when running on a
-randomly selected ESL lab computer and give the correct results.
+
+Five bonus marks will be awarded to any group who can beat our (not
+very good) program when running on a randomly selected ESL lab
+computer and give the correct results.
 
 Your report should present the statistics for the time your program
 takes to run for the following problem sizes: $N=101, 201, 301, 401,
