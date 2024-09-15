@@ -168,8 +168,8 @@ int main (int argc, char **argv)
 
     source[(z * n + y) * n + x] = amplitude;
 
-    // Calculate the resulting field with Neumann conditions
-    double *result = poisson_neumann (n, source, iterations, threads, delta);
+    // Calculate the resulting field with mixed boundary conditions
+    double *result = poisson_mixed (n, source, iterations, threads, delta);
 
     // Print out the middle slice of the cube for validation
     for (int y = 0; y < n; ++y)
