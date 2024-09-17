@@ -38,21 +38,54 @@
 
 // Global flag
 // Set to true when operating in debug mode to enable verbose logging
-static bool debug = false;
+static bool debug = true;
+
+/** 
+ * @brief Perform one interation of the poisson equation
+ * 
+ * @param N the size of the array
+ * @param source Pointer to the source term
+ * @param curr Pointer to the current array
+ * @param next Pointer to the next array (to update)
+ * @param delta The delta
+ */
+ void poisson_iteration_slow(int N, double ***source, double ***curr, double ***next, float delta) {
+    // Apply constant boundary
+    for (int i = 1; i < N-1; i++) {
+        for (int j = 1; j < N-1; j++) {
+            next[0][j][i] = -1;
+            next[N-1][j][i] = 1;
+        }
+    }
+
+    // Apply Neumann Boundary
+
+
+    for (int i = 1; i < N-1; i++) {
+        for (int j = 1; j < N-1; j++) {
+            for (int k = 1; k < N-1; k++) {
+                next[k][j][i] = 1/6*(curr[k][j][i+1]+curr[k][j][i-1]
+                                    +curr[k][j+1][i]+curr[k][j-1][i]
+                                    +curr[k+1][j][i]+curr[k-1][j][i]
+                                    -delta*delta*source[k][j][i]);
+            }
+        }
+    }
+ }
 
 
 /**
  * @brief Solve Poissons equation for a given cube with Dirichlet boundary
  * conditions on all sides.
  *
- * @param n             The edge length of the cube. n^3 number of elements.
+ * @param N             The edge length of the cube. n^3 number of elements.
  * @param source        Pointer to the source term cube, a.k.a. forcing function.
  * @param iterations    Number of iterations to perform.
  * @param threads       Number of threads to use for solving.
  * @param delta         Grid spacing.
  * @return double*      Solution to Poissons equation.  Caller must free.
  */
-double* poisson_mixed (int n, double *source, int iterations, int threads, float delta)
+double* poisson_mixed (int N, double *source, int iterations, int threads, float delta)
 {
     if (debug)
     {
@@ -61,21 +94,24 @@ double* poisson_mixed (int n, double *source, int iterations, int threads, float
                "iterations = %i\n"
                "threads = %i\n"
                "delta = %f\n",
-               n, iterations, threads, delta);
+               N, iterations, threads, delta);
     }
 
     // Allocate some buffers to calculate the solution in
-    double *curr = (double*)calloc (n * n * n, sizeof (double));
-    double *next = (double*)calloc (n * n * n, sizeof (double));
-
+    double ***curr = (double***)calloc (N * N * N, sizeof (double));
+    double ***next = (double***)calloc (N * N * N, sizeof (double));
+    double ***source_multi = (double***)source;
     // Ensure we haven't run out of memory
     if (curr == NULL || next == NULL)
     {
-        fprintf (stderr, "Error: ran out of memory when trying to allocate %i sized cube\n", n);
+        fprintf (stderr, "Error: ran out of memory when trying to allocate %i sized cube\n", N);
         exit (EXIT_FAILURE);
     }
 
     // TODO: solve Poisson's equation for the given inputs
+    for (int n = 0; n < iterations; n++) {
+        poisson_iteration_slow(N, source_multi, curr, next, delta);
+    }
 
     // Free one of the buffers and return the correct answer in the other.
     // The caller is now responsible for free'ing the returned pointer.
@@ -86,7 +122,7 @@ double* poisson_mixed (int n, double *source, int iterations, int threads, float
         printf ("Finished solving.\n");
     }
 
-    return curr;
+    return (double*)curr;
 }
 
 
