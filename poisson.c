@@ -42,13 +42,14 @@
  * @param z the z coord
  * @param y the y coord
  * @param x the x coord
- *
+ *optarg
  */
-#define idx(array, N, z, y, x) array[z*N*N + j*N + i]
+#define idx(array, N, z, y, x) (array[((z)*N + (y)) * N + (x)])
 
+extern char* optarg;
 // Global flag
 // Set to true when operating in debug mode to enable verbose logging
-static bool debug = true;
+static bool debug = false;
 
 // Statics
 const double top_boundary_cond = -1; // V The top dirlec boundary condition
@@ -65,26 +66,69 @@ const double bottom_boundary_cond = 1; // V The bottom dirlec boundary condition
  */
 void poisson_iteration_slow(int N, double* source, double* curr, double* next, float delta) {
     // Apply constant boundary
-    for (int i = 0; i < N - 1; i++) {
-        for (int j = 0; j < N - 1; j++) {
+    for (int j = 0; j < N; j++) {
+        for (int i = 0; i < N; i++) {
             idx(next, N, 0, j, i) = top_boundary_cond;
-            idx(next, N, N - 1, j, i) = bottom_boundary_cond;
+            idx(next, N, N-1, j, i) = bottom_boundary_cond;
         }
     }
 
     // Apply Neumann Boundary
 
 
-    // for (int i = 1; i < N-1; i++) {
-    //     for (int j = 1; j < N-1; j++) {
-    //         for (int k = 1; k < N-1; k++) {
-    //             next[k][j][i] = 1/6*(curr[k][j][i+1]+curr[k][j][i-1]
-    //                                 +curr[k][j+1][i]+curr[k][j-1][i]
-    //                                 +curr[k+1][j][i]+curr[k-1][j][i]
-    //                                 -delta*delta*source[k][j][i]);
-    //         }
-    //     }
-    // }
+    for (int k = 1; k < N-1; k++) {
+        for (int j = 0; j < N; j++) {
+            for (int i = 0; i < N; i++) {
+                if (i == 0 && j == 0) {
+                    idx(next,N,k,j,i) = (2*idx(curr,N,k,j,i+1)
+                                        +2*idx(curr,N,k,j+1,i)
+                                        +idx(curr,N,k+1,j,i)+idx(curr,N,k-1,j,i)
+                                        -delta*delta*idx(source,N,k,j,i)) / 6;
+                } else if (i == N-1 && j == N-1) {
+                    idx(next,N,k,j,i) = (2*idx(curr,N,k,j,i-1)
+                                        +2*idx(curr,N,k,j-1,i)
+                                        +idx(curr,N,k+1,j,i)+idx(curr,N,k-1,j,i)
+                                        -delta*delta*idx(source,N,k,j,i)) / 6;
+                } else if (i == 0 && j == N-1) {
+                    idx(next,N,k,j,i) = (2*idx(curr,N,k,j,i+1)
+                                        +2*idx(curr,N,k,j-1,i)
+                                        +idx(curr,N,k+1,j,i)+idx(curr,N,k-1,j,i)
+                                        -delta*delta*idx(source,N,k,j,i)) / 6;
+                } else if (i == N-1 && j == 0) {
+                    idx(next,N,k,j,i) = (2*idx(curr,N,k,j,i-1)
+                                        +2*idx(curr,N,k,j+1,i)
+                                        +idx(curr,N,k+1,j,i)+idx(curr,N,k-1,j,i)
+                                        -delta*delta*idx(source,N,k,j,i)) / 6;
+                } else if (i == 0) {
+                    idx(next,N,k,j,i) = (2*idx(curr,N,k,j,i+1)
+                                        +idx(curr,N,k,j+1,i)+idx(curr,N,k,j-1,i)
+                                        +idx(curr,N,k+1,j,i)+idx(curr,N,k-1,j,i)
+                                        -delta*delta*idx(source,N,k,j,i)) / 6;
+                } else if (i == N-1) {
+                    idx(next,N,k,j,i) = (2*idx(curr,N,k,j,i-1)
+                                        +idx(curr,N,k,j+1,i)+idx(curr,N,k,j-1,i)
+                                        +idx(curr,N,k+1,j,i)+idx(curr,N,k-1,j,i)
+                                        -delta*delta*idx(source,N,k,j,i)) / 6;
+                } else if (j == 0) {
+                    idx(next,N,k,j,i) = (idx(curr,N,k,j,i+1)+idx(curr,N,k,j,i-1)
+                                        +2*idx(curr,N,k,j+1,i)
+                                        +idx(curr,N,k+1,j,i)+idx(curr,N,k-1,j,i)
+                                        -delta*delta*idx(source,N,k,j,i)) / 6;
+                } else if (j == N-1) {
+                    idx(next,N,k,j,i) = (idx(curr,N,k,j,i+1)+idx(curr,N,k,j,i-1)
+                                        +2*idx(curr,N,k,j-1,i)
+                                        +idx(curr,N,k+1,j,i)+idx(curr,N,k-1,j,i)
+                                        -delta*delta*idx(source,N,k,j,i)) / 6;
+
+                } else {
+                    idx(next,N,k,j,i) = (idx(curr,N,k,j,i+1)+idx(curr,N,k,j,i-1)
+                                        +idx(curr,N,k,j+1,i)+idx(curr,N,k,j-1,i)
+                                        +idx(curr,N,k+1,j,i)+idx(curr,N,k-1,j,i)
+                                        -delta*delta*idx(source,N,k,j,i)) / 6;
+                }
+            }
+        }
+    }
 }
 
 
@@ -121,12 +165,21 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
     // TODO: solve Poisson's equation for the given inputs
     for (int n = 0; n < iterations; n++) {
         poisson_iteration_slow(N, source, curr, next, delta);
-        memcpy(curr, next, N * N * N);
+        memcpy(curr, next, N * N * N * sizeof(double));
+        if (debug) {
+            printf("middle for iteration %d\n",n);
+            for (int y = 0; y < N; ++y) {
+                for (int x = 0; x < N; ++x) {
+                    printf("%0.5f ", curr[((4) * N + y) * N + x]);
+                }
+                printf("\n");
+            }
+        }
     }
 
     // Free one of the buffers and return the correct answer in the other.
     // The caller is now responsible for free'ing the returned pointer.
-    free(next);
+    // free(next);
 
     if (debug) {
         printf("Finished solving.\n");
@@ -213,6 +266,9 @@ int main(int argc, char** argv) {
     double* result = poisson_mixed(n, source, iterations, threads, delta);
 
     // Print out the middle slice of the cube for validation
+    if (debug) {
+        printf("--MIDDLE--\n");
+    }
     for (int y = 0; y < n; ++y) {
         for (int x = 0; x < n; ++x) {
             printf("%0.5f ", result[((n / 2) * n + y) * n + x]);
@@ -220,12 +276,6 @@ int main(int argc, char** argv) {
         printf("\n");
     }
 
-    for (int y = 0; y < n; ++y) {
-        for (int x = 0; x < n; ++x) {
-            printf("%3.5f ", result[0 + n * y + n * x]);
-        }
-        printf("\n");
-    }
     free(source);
     free(result);
 
