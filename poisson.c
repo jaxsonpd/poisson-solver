@@ -35,43 +35,57 @@
  * multithreading (see also threads.c which is reference by the lab notes).
  */
 
+/**
+ * @brief index a 3d array
+ * @param array the array to index
+ * @param N the length of a element
+ * @param z the z coord
+ * @param y the y coord
+ * @param x the x coord
+ *
+ */
+#define idx(array, N, z, y, x) array[z*N*N + j*N + i]
 
 // Global flag
 // Set to true when operating in debug mode to enable verbose logging
 static bool debug = true;
 
-/** 
+// Statics
+const double top_boundary_cond = -1; // V The top dirlec boundary condition
+const double bottom_boundary_cond = 1; // V The bottom dirlec boundary condition
+
+/**
  * @brief Perform one interation of the poisson equation
- * 
+ *
  * @param N the size of the array
  * @param source Pointer to the source term
  * @param curr Pointer to the current array
  * @param next Pointer to the next array (to update)
  * @param delta The delta
  */
- void poisson_iteration_slow(int N, double ***source, double ***curr, double ***next, float delta) {
+void poisson_iteration_slow(int N, double* source, double* curr, double* next, float delta) {
     // Apply constant boundary
-    for (int i = 1; i < N-1; i++) {
-        for (int j = 1; j < N-1; j++) {
-            next[0][j][i] = -1;
-            next[N-1][j][i] = 1;
+    for (int i = 0; i < N - 1; i++) {
+        for (int j = 0; j < N - 1; j++) {
+            idx(next, N, 0, j, i) = top_boundary_cond;
+            idx(next, N, N - 1, j, i) = bottom_boundary_cond;
         }
     }
 
     // Apply Neumann Boundary
 
 
-    for (int i = 1; i < N-1; i++) {
-        for (int j = 1; j < N-1; j++) {
-            for (int k = 1; k < N-1; k++) {
-                next[k][j][i] = 1/6*(curr[k][j][i+1]+curr[k][j][i-1]
-                                    +curr[k][j+1][i]+curr[k][j-1][i]
-                                    +curr[k+1][j][i]+curr[k-1][j][i]
-                                    -delta*delta*source[k][j][i]);
-            }
-        }
-    }
- }
+    // for (int i = 1; i < N-1; i++) {
+    //     for (int j = 1; j < N-1; j++) {
+    //         for (int k = 1; k < N-1; k++) {
+    //             next[k][j][i] = 1/6*(curr[k][j][i+1]+curr[k][j][i-1]
+    //                                 +curr[k][j+1][i]+curr[k][j-1][i]
+    //                                 +curr[k+1][j][i]+curr[k-1][j][i]
+    //                                 -delta*delta*source[k][j][i]);
+    //         }
+    //     }
+    // }
+}
 
 
 /**
@@ -85,41 +99,37 @@ static bool debug = true;
  * @param delta         Grid spacing.
  * @return double*      Solution to Poissons equation.  Caller must free.
  */
-double* poisson_mixed (int N, double *source, int iterations, int threads, float delta)
-{
-    if (debug)
-    {
-        printf ("Starting solver with:\n"
-               "n = %i\n"
-               "iterations = %i\n"
-               "threads = %i\n"
-               "delta = %f\n",
-               N, iterations, threads, delta);
+double* poisson_mixed(int N, double* source, int iterations, int threads, float delta) {
+    if (debug) {
+        printf("Starting solver with:\n"
+            "n = %i\n"
+            "iterations = %i\n"
+            "threads = %i\n"
+            "delta = %f\n",
+            N, iterations, threads, delta);
     }
 
     // Allocate some buffers to calculate the solution in
-    double ***curr = (double***)calloc (N * N * N, sizeof (double));
-    double ***next = (double***)calloc (N * N * N, sizeof (double));
-    double ***source_multi = (double***)source;
+    double* curr = (double*)calloc(N * N * N, sizeof(double));
+    double* next = (double*)calloc(N * N * N, sizeof(double));
     // Ensure we haven't run out of memory
-    if (curr == NULL || next == NULL)
-    {
-        fprintf (stderr, "Error: ran out of memory when trying to allocate %i sized cube\n", N);
-        exit (EXIT_FAILURE);
+    if (curr == NULL || next == NULL) {
+        fprintf(stderr, "Error: ran out of memory when trying to allocate %i sized cube\n", N);
+        exit(EXIT_FAILURE);
     }
 
     // TODO: solve Poisson's equation for the given inputs
     for (int n = 0; n < iterations; n++) {
-        poisson_iteration_slow(N, source_multi, curr, next, delta);
+        poisson_iteration_slow(N, source, curr, next, delta);
+        memcpy(curr, next, N * N * N);
     }
 
     // Free one of the buffers and return the correct answer in the other.
     // The caller is now responsible for free'ing the returned pointer.
-    free (next);
+    free(next);
 
-    if (debug)
-    {
-        printf ("Finished solving.\n");
+    if (debug) {
+        printf("Finished solving.\n");
     }
 
     return (double*)curr;
@@ -127,8 +137,7 @@ double* poisson_mixed (int N, double *source, int iterations, int threads, float
 
 
 
-int main (int argc, char **argv)
-{
+int main(int argc, char** argv) {
     // Default settings for solver
     int iterations = 10;
     int n = 5;
@@ -142,12 +151,10 @@ int main (int argc, char **argv)
     int opt;
 
     // parse the command line arguments
-    while  ( (opt = getopt (argc, argv, "h:n:i:x:y:z:a:t:d:")) != -1)
-    {
-        switch(opt)
-        {
+    while ((opt = getopt(argc, argv, "h:n:i:x:y:z:a:t:d:")) != -1) {
+        switch (opt) {
         case 'h':
-            printf ("Usage: poisson [-n size] [-x source x-poisition] [-y source y-position] [-z source z-position] [-a source amplitude] [-i iterations] [-t threads] [-d] (for debug mode)\n");
+            printf("Usage: poisson [-n size] [-x source x-poisition] [-y source y-position] [-z source z-position] [-a source amplitude] [-i iterations] [-t threads] [-d] (for debug mode)\n");
             return EXIT_SUCCESS;
         case 'n':
             n = atoi(optarg);
@@ -174,51 +181,53 @@ int main (int argc, char **argv)
             debug = true;
             break;
         default:
-            fprintf (stderr, "Usage: poisson [-n size] [-x source x-poisition] [-y source y-position] [-z source z-position] [-a source amplitude]  [-i iterations] [-t threads] [-d] (for debug mode)\n");
-            exit (EXIT_FAILURE);
+            fprintf(stderr, "Usage: poisson [-n size] [-x source x-poisition] [-y source y-position] [-z source z-position] [-a source amplitude]  [-i iterations] [-t threads] [-d] (for debug mode)\n");
+            exit(EXIT_FAILURE);
         }
     }
 
     // Ensure we have an odd sized cube
-    if (n % 2 == 0)
-    {
-        fprintf (stderr, "Error: n should be an odd number!\n");
+    if (n % 2 == 0) {
+        fprintf(stderr, "Error: n should be an odd number!\n");
         return EXIT_FAILURE;
     }
 
     // Create a source term with a single point in the centre
-    double *source = (double*)calloc (n * n * n, sizeof (double));
-    if (source == NULL)
-    {
-        fprintf (stderr, "Error: failed to allocated source term (n=%i)\n", n);
+    double* source = (double*)calloc(n * n * n, sizeof(double));
+    if (source == NULL) {
+        fprintf(stderr, "Error: failed to allocated source term (n=%i)\n", n);
         return EXIT_FAILURE;
     }
 
     // Default x,y, z
-    if (x < 0 || x > n-1)
+    if (x < 0 || x > n - 1)
         x = n / 2;
-    if (y < 0 || y > n-1)
+    if (y < 0 || y > n - 1)
         y = n / 2;
-    if (z < 0 || z > n-1)
+    if (z < 0 || z > n - 1)
         z = n / 2;
 
     source[(z * n + y) * n + x] = amplitude;
 
     // Calculate the resulting field with mixed boundary conditions
-    double *result = poisson_mixed (n, source, iterations, threads, delta);
+    double* result = poisson_mixed(n, source, iterations, threads, delta);
 
     // Print out the middle slice of the cube for validation
-    for (int y = 0; y < n; ++y)
-    {
-        for (int x = 0; x < n; ++x)
-        {
-            printf ("%0.5f ", result[((n / 2) * n + y) * n + x]);
+    for (int y = 0; y < n; ++y) {
+        for (int x = 0; x < n; ++x) {
+            printf("%0.5f ", result[((n / 2) * n + y) * n + x]);
         }
-        printf ("\n");
+        printf("\n");
     }
 
-    free (source);
-    free (result);
+    for (int y = 0; y < n; ++y) {
+        for (int x = 0; x < n; ++x) {
+            printf("%3.5f ", result[0 + n * y + n * x]);
+        }
+        printf("\n");
+    }
+    free(source);
+    free(result);
 
     return EXIT_SUCCESS;
 }
