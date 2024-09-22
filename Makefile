@@ -6,7 +6,7 @@ all: poisson
 CFLAGS = -g -Wall -pthread
 CC = gcc 
 
-poisson: poisson.c
+poisson: poisson.c worker_thread.c
 
 .PHONY: disassembly
 disassembly: poisson.s

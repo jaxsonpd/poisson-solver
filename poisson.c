@@ -4,6 +4,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
+
+#include "utils.h"
+
+#include "worker_thread.h"
 
 
 /**
@@ -35,18 +40,9 @@
  * multithreading (see also threads.c which is reference by the lab notes).
  */
 
-/**
- * @brief index a 3d array
- * @param array the array to index
- * @param N the length of a element
- * @param z the z coord
- * @param y the y coord
- * @param x the x coord
- *optarg
- */
-#define idx(array, N, z, y, x) (array[((z)*N + (y)) * N + (x)])
-
 extern char* optarg;
+
+pthread_t single_thread;
 
 // Global flag
 // Set to true when operating in debug mode to enable verbose logging
@@ -66,8 +62,8 @@ const double bottom_boundary_cond = 1; // V The bottom dirlec boundary condition
 void apply_const_boundary(int N, double* next) {
     for (int j = 0; j < N; j++) {
         for (int i = 0; i < N; i++) {
-            idx(next, N, 0, j, i) = top_boundary_cond;
-            idx(next, N, N - 1, j, i) = bottom_boundary_cond;
+            idx(next, N, 0, j, i) = TOP_BOUNDARY_COND;
+            idx(next, N, N - 1, j, i) = BOTTOM_BOUNDARY_COND;
         }
     }
 }
@@ -170,8 +166,8 @@ void poisson_iteration_slow(int N, double* source, double* curr, double* next, f
     // Apply constant boundary
     for (int j = 0; j < N; j++) {
         for (int i = 0; i < N; i++) {
-            idx(next, N, 0, j, i) = top_boundary_cond;
-            idx(next, N, N - 1, j, i) = bottom_boundary_cond;
+            idx(next, N, 0, j, i) = TOP_BOUNDARY_COND;
+            idx(next, N, N - 1, j, i) = BOTTOM_BOUNDARY_COND;
         }
     }
 
@@ -264,20 +260,38 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
         exit(EXIT_FAILURE);
     }
 
-    // TODO: solve Poisson's equation for the given inputs
-    for (int n = 0; n < iterations; n++) {
-        poisson_iteration_faster(N, source, curr, next, delta);
-        memcpy(curr, next, N * N * N * sizeof(double));
-        if (debug) {
-            printf("middle for iteration %d\n", n);
-            for (int y = 0; y < N; ++y) {
-                for (int x = 0; x < N; ++x) {
-                    printf("%0.5f ", curr[((4) * N + y) * N + x]);
-                }
-                printf("\n");
-            }
+    // Apply constant boundary
+    for (int j = 0; j < N; j++) {
+        for (int i = 0; i < N; i++) {
+            idx(next, N, 0, j, i) = TOP_BOUNDARY_COND;
+            idx(next, N, N - 1, j, i) = BOTTOM_BOUNDARY_COND;
         }
     }
+
+    workerThread_t worker_info = {
+        .thread_id = 0,
+
+        .N = N,
+        .source = source,
+        .curr = curr,
+        .next = next,
+        .delta = delta,
+        .iterations = iterations,
+        .k_start = 1,
+        .k_end = N-1,
+        .j_start = 0,
+        .j_end = N,
+        .i_start = 0,
+        .i_end = N
+    };
+
+    pthread_create(&single_thread, NULL, worker_thread, &worker_info);
+
+    pthread_join(single_thread, NULL);
+
+
+
+
 
     // Free one of the buffers and return the correct answer in the other.
     // The caller is now responsible for free'ing the returned pointer.
