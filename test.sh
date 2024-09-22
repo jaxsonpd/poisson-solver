@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/bin/sh
 
 status=0
 
