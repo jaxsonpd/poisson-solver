@@ -83,7 +83,7 @@ So following this, we could modify the compilation command for the poisson
 program to be:
 %
 \begin{minted}{shell}
-$ g++ -pg -g -o poisson poisson.c -lpthread
+$ gcc -pg -g -pthread -o poisson poisson.c
 \end{minted}
 %
 The \texttt{-g} option is required to include debugging symbols for annotating the program.
@@ -91,7 +91,7 @@ The \texttt{-g} option is required to include debugging symbols for annotating t
 
 \subsection{Executing with profiling}
 
-This is the same as executing the program normalling. Simply run
+This is the same as executing the program normally. Simply run
 \begin{minted}{shell}
 $ ./poisson -n 101 -i 100
 \end{minted}
