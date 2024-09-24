@@ -6,5 +6,5 @@ threads
 *.log
 *.out
 cachegrind.out.*
-
+.vscode
 _minted-*/
