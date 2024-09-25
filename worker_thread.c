@@ -16,6 +16,28 @@
 
 #include "worker_thread.h"
 
+/**
+ * @brief Allocate memory for the next array
+ * 
+ */
+void memory_allocation(workerThread_t* worker_info, int N) {
+    for (int k = worker_info->k_start; k < worker_info->k_end; k++) {
+        for (int j = worker_info->j_start; j < worker_info->j_end; j++) {
+            size_t offset = (k * N * N) + (j * N) + worker_info->i_start;
+            size_t size = (worker_info->i_end - worker_info->i_start) * sizeof(double);
+
+            memcpy(worker_info->curr + offset, worker_info->next + offset, size);
+        }
+    }
+           
+}
+
+/**
+ * @brief The worker thread function
+ * @param pargs a WorkerThread_t pointer
+ *
+ * @return void* 
+ */
 void* worker_thread(void* pargs) {
     workerThread_t* worker_info = (workerThread_t*)pargs;
     int N = worker_info->N;
@@ -75,7 +97,8 @@ void* worker_thread(void* pargs) {
             }
         }
         // TODO move to custom function for worker indexes
-        memcpy(worker_info->curr, worker_info->next, N * N * N * sizeof(double));
+        // memcpy(worker_info->curr, worker_info->next, N * N * N * sizeof(double));
+        memory_allocation(worker_info, N);
         // TODO do semaphore stuff
     }
 
