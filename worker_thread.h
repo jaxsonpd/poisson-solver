@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 typedef struct WorkerThread {
     int thread_id;
@@ -30,6 +31,9 @@ typedef struct WorkerThread {
     int j_end;
     int i_start;
     int i_end;
+
+    pthread_barrier_t* barrier;
+
 } workerThread_t;
 
 /**

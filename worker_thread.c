@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <pthread.h>
 
 #include "utils.h"
 
@@ -77,8 +77,10 @@ void* worker_thread(void* pargs) {
         // TODO move to custom function for worker indexes
         memcpy(worker_info->curr, worker_info->next, N * N * N * sizeof(double));
         // TODO do semaphore stuff
+        pthread_barrier_wait(worker_info->barrier);
+        printf("Thread %d done waiting.\n",worker_info->thread_id);
+        
     }
-
 
     return NULL;
 }
