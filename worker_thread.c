@@ -17,6 +17,22 @@
 
 #include "worker_thread.h"
 
+/** 
+ * @brief Wait before performing memcopy_3D
+ * 
+ */
+void wait_to_copy(workerThread_t *worker_info) {
+    pthread_barrier_wait(worker_info->barrier);
+}
+
+/** 
+ * @brief Wait before starting new iteration
+ * 
+ */
+void wait_to_start(workerThread_t *worker_info) {
+    pthread_barrier_wait(worker_info->barrier);
+}
+
 /**
  * @brief The worker thread function
  * @param pargs a WorkerThread_t pointer
@@ -85,14 +101,9 @@ void* worker_thread(void* pargs) {
                 }
             }
         }
-        pthread_barrier_wait(worker_info->barrier);
-        // TODO move to custom function for worker indexes
-        // memcpy(worker_info->curr, worker_info->next, N * N * N * sizeof(double));
-        // memory_allocation1(worker_info, N);
+        wait_to_copy(worker_info);
         memcopy_3D(N, worker_info->curr, worker_info->next, worker_info->slice_3D);
-        // TODO do semaphore stuff
-        pthread_barrier_wait(worker_info->barrier);
-        // printf("Thread %d done waiting.\n",worker_info->thread_id);
+        wait_to_start(worker_info);
         
     }
 
