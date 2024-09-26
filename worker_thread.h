@@ -14,6 +14,9 @@
 #include <stdbool.h>
 #include <pthread.h>
 
+
+#include "utils.h"
+
 typedef struct WorkerThread {
     int thread_id;
     
@@ -25,12 +28,7 @@ typedef struct WorkerThread {
 
     int iterations;
 
-    int k_start;
-    int k_end;
-    int j_start;
-    int j_end;
-    int i_start;
-    int i_end;
+    slice3D_t slice_3D;
 
     pthread_barrier_t* barrier;
 

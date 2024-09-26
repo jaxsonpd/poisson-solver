@@ -18,53 +18,6 @@
 #include "worker_thread.h"
 
 /**
- * @brief First Allocate memory for the next array
- * Works by doing each thread is a column/row in a layer 
- * 
- */
-void memory_allocation(workerThread_t* worker_info, int N) {
-    for (int k = worker_info->k_start; k < worker_info->k_end; k++) {
-        for (int j = worker_info->j_start; j < worker_info->j_end; j++) {
-            for (int i = worker_info->i_start; i < worker_info->i_end; i++) {
-                worker_info->next[k * N * N + j * N + i] = worker_info->curr[k * N * N + j * N + i];
-            }
-        }
-    }
-}
-
-/**
- * @brief First Allocate memory for the next array
- * Works by doing each thread is a column/row in a layer 
- * 
- */
-void memory_allocation1(workerThread_t* worker_info, int N) {
-    for (int k = worker_info->k_start; k < worker_info->k_end; k++) {
-        for (int j = worker_info->j_start; j < worker_info->j_end; j++) {
-            size_t offset = (k * N * N) + (j * N) + worker_info->i_start;
-            size_t size = (worker_info->i_end - worker_info->i_start) * sizeof(double);
-
-            memcpy(worker_info->curr + offset, worker_info->next + offset, size);
-        }
-    }
-           
-}
-
-/**
- * @brief Second Allocate memory for the next array
- * Works by doing each thread is an entire layer
- * 
- */
-void memory_allocation2(workerThread_t* worker_info, int N) {
-    for (int k = worker_info->k_start; k < worker_info->k_end; k++) {
-        for (int j = 0; j < N; j++) {
-            size_t offset = (k * N * N) + (j * N); 
-            size_t size = N * sizeof(double);      
-            memcpy(worker_info->curr + offset, worker_info->next + offset, size);
-        }
-    }
-}
-
-/**
  * @brief The worker thread function
  * @param pargs a WorkerThread_t pointer
  *
@@ -75,9 +28,9 @@ void* worker_thread(void* pargs) {
     int N = worker_info->N;
 
     for (int n = 0; n < worker_info->iterations; n++) {
-        for (int k = worker_info->k_start; k < worker_info->k_end; k++) {
-            for (int j = worker_info->j_start; j < worker_info->j_end; j++) {
-                for (int i = worker_info->i_start; i < worker_info->i_end; i++) {
+        for (int k = worker_info->slice_3D.k_start; k < worker_info->slice_3D.k_end; k++) {
+            for (int j = worker_info->slice_3D.j_start; j < worker_info->slice_3D.j_end; j++) {
+                for (int i = worker_info->slice_3D.i_start; i < worker_info->slice_3D.i_end; i++) {
                     if (i == 0 && j == 0) {
                         idx(worker_info->next, N, k, j, i) = (2 * idx(worker_info->curr, N, k, j, i + 1)
                             + 2 * idx(worker_info->curr, N, k, j + 1, i)
@@ -136,13 +89,7 @@ void* worker_thread(void* pargs) {
         // TODO move to custom function for worker indexes
         // memcpy(worker_info->curr, worker_info->next, N * N * N * sizeof(double));
         // memory_allocation1(worker_info, N);
-        for (int k = worker_info->k_start; k < worker_info->k_end; k++) {
-            for (int j = worker_info->j_start; j < worker_info->j_end; j++) {
-                for (int i = worker_info->i_start; i < worker_info->i_end; i++) {
-                    idx(worker_info->curr, N, k, j, i) = idx(worker_info->next, N, k, j, i);
-                }
-            }
-        }
+        memcopy_3D(N, worker_info->curr, worker_info->next, worker_info->slice_3D);
         // TODO do semaphore stuff
         pthread_barrier_wait(worker_info->barrier);
         // printf("Thread %d done waiting.\n",worker_info->thread_id);

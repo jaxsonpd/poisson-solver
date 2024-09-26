@@ -27,5 +27,28 @@
  */
 #define idx(array, N, z, y, x) (array[((z)*N + (y)) * N + (x)])
 
+/**
+ * @struct Slice3D
+ * Store a 3D slice of an array
+ */
+typedef struct Slice3D {
+    int k_start;    ///< The start of the k slice
+    int k_end;      ///< The end of the k slice
+    int j_start;    ///< The start of the j slice
+    int j_end;      ///< The end of the j slice
+    int i_start;    ///< The start of the i slice
+    int i_end;      ///< The end of the i slice
+} slice3D_t;  
+
+/** 
+ * @brief Copy a slice a three dimentional array
+ * @param N the length of the cube
+ * @param curr the current array
+ * @param next the next array
+ * @param slice_3D the slice to copy
+ * 
+ */
+void memcopy_3D(int N, double *curr, double *next, slice3D_t slice_3D);
+
 
 #endif // UTILS_H
