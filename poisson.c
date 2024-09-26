@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <math.h>
 
 #include "utils.h"
 
@@ -227,7 +228,6 @@ void poisson_iteration_slow(int N, double* source, double* curr, double* next, f
     }
 }
 
-
 /**
  * @brief Solve Poissons equation for a given cube with Dirichlet boundary
  * conditions on all sides.
@@ -271,9 +271,13 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
     }
 
     pthread_barrier_init(&barrier, NULL, threads);
+
+    
+
+    int thickness = ceil((N-2)/(float)threads);
+
     // Launch each of the new worker threads
-    for (int i = 0; i < threads; i++)
-    {
+    for (int i = 0; i < threads; i++) {
         
         // Fill in the arguments to the worker
         thread_info[i].thread_id = i;
@@ -283,8 +287,13 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
         thread_info[i].next = next;
         thread_info[i].delta = delta;
         thread_info[i].iterations = iterations;
-        thread_info[i].k_start = 1 + ((N * i) / threads) ; // This is probably wrong
-        thread_info[i].k_end = -1 + (N * (i+1)) / threads; // This too
+        // thread_info[i].k_start = 1 + ((N * i) / threads) ; // This is probably wrong
+        // thread_info[i].k_end = -1 + (N * (i+1)) / threads; // This too
+        thread_info[i].k_start = i*thickness+1;
+        int k_end = (i+1)*thickness+1;
+        thread_info[i].k_end = k_end > (N-1) ? N-1 : k_end;
+        // printf("Thread: %d, k_start %d, k_end %d\n", i, thread_info[i].k_start, thread_info[i].k_end);
+
         thread_info[i].j_start = 0;
         thread_info[i].j_end = N;
         thread_info[i].i_start = 0;
@@ -321,7 +330,7 @@ int main(int argc, char** argv) {
     // Default settings for solver
     int iterations = 10;
     int n = 5;
-    int threads = 1;
+    int threads = 3;
     float delta = 1;
     int x = -1;
     int y = -1;

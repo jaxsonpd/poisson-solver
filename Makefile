@@ -3,7 +3,8 @@ all: poisson
 # -g outputs debugging information
 # -Wall enables all warnings
 # -pthread configures threading
-CFLAGS = -g -Wall -pthread -D_XOPEN_SOURCE=600
+CFLAGS = -g -Wall -lpthread -D_XOPEN_SOURCE=600
+LDLIBS = -lm
 CC = gcc 
 
 poisson: poisson.c worker_thread.c
@@ -15,8 +16,8 @@ poisson.s: poisson
 	objdump -S --disassemble $< > $@
 
 .PHONY: profile
-profile: poisson.c
-	$(CC) $(CFLAGS) -pg $< -o poisson-profile
+profile: poisson.c worker_thread.c
+	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -o poisson-profile
 
 .PHONY: test
 test: poisson
