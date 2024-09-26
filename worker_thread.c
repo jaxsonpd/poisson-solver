@@ -24,6 +24,21 @@
 void memory_allocation(workerThread_t* worker_info, int N) {
     for (int k = worker_info->k_start; k < worker_info->k_end; k++) {
         for (int j = worker_info->j_start; j < worker_info->j_end; j++) {
+            for (int i = worker_info->i_start; i < worker_info->i_end; i++) {
+                worker_info->next[k * N * N + j * N + i] = worker_info->curr[k * N * N + j * N + i];
+            }
+        }
+    }
+}
+
+/**
+ * @brief First Allocate memory for the next array
+ * Works by doing each thread is a column/row in a layer 
+ * 
+ */
+void memory_allocation1(workerThread_t* worker_info, int N) {
+    for (int k = worker_info->k_start; k < worker_info->k_end; k++) {
+        for (int j = worker_info->j_start; j < worker_info->j_end; j++) {
             size_t offset = (k * N * N) + (j * N) + worker_info->i_start;
             size_t size = (worker_info->i_end - worker_info->i_start) * sizeof(double);
 
@@ -109,12 +124,23 @@ void* worker_thread(void* pargs) {
                             + idx(worker_info->curr, N, k + 1, j, i) + idx(worker_info->curr, N, k - 1, j, i)
                             - worker_info->delta * worker_info->delta * idx(worker_info->source, N, k, j, i)) / 6;;
                     }
+                    // idx(worker_info->next, N, k, j, i) = idx(worker_info->curr, N, k, j, i);
+                    // Assign the value from curr to next
+
+
                 }
             }
         }
         // TODO move to custom function for worker indexes
         // memcpy(worker_info->curr, worker_info->next, N * N * N * sizeof(double));
-        memory_allocation2(worker_info, N);
+        // memory_allocation1(worker_info, N);
+        for (int k = worker_info->k_start; k < worker_info->k_end; k++) {
+            for (int j = worker_info->j_start; j < worker_info->j_end; j++) {
+                for (int i = worker_info->i_start; i < worker_info->i_end; i++) {
+                    idx(worker_info->curr, N, k, j, i) = idx(worker_info->next, N, k, j, i);
+                }
+            }
+        }
         // TODO do semaphore stuff
     }
 
