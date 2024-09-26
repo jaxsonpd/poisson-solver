@@ -8,6 +8,7 @@
 #include <math.h>
 
 #include "utils.h"
+#include "poisson_iter.h"
 
 #include "worker_thread.h"
 
@@ -86,12 +87,7 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
     }
 
     // Apply constant boundary
-    for (int j = 0; j < N; j++) {
-        for (int i = 0; i < N; i++) {
-            idx(next, N, 0, j, i) = TOP_BOUNDARY_COND;
-            idx(next, N, N - 1, j, i) = BOTTOM_BOUNDARY_COND;
-        }
-    }
+    apply_const_boundary(N, next);
 
     pthread_barrier_init(&barrier, NULL, threads);
 

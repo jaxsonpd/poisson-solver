@@ -1,10 +1,18 @@
-/**
- * @brief Apply the dirlect boundary conditions to the top and bottom of the
- * cube
- * @param N the length of the cube
- * @param next the array to populate
- *
+/** 
+ * @file poisson_iter.c
+ * @author Jack Duignan (Jdu80@uclive.ac.nz)
+ * @date 2024-09-26
+ * @brief Functions for performing poisson iterations
  */
+
+
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "utils.h"
+
+#include "poisson_iter.h"
+
 void apply_const_boundary(int N, double* next) {
     for (int j = 0; j < N; j++) {
         for (int i = 0; i < N; i++) {
@@ -14,16 +22,6 @@ void apply_const_boundary(int N, double* next) {
     }
 }
 
-/**
- * @brief Apply the von neuman boundary condition
- *
- * @param N the length of the sides of the cube
- * @param source the sourcing term
- * @param curr the current state of the calculation
- * @param next the next array to populate
- * @param delta the delta
- *
- */
 void apply_von_neuman_boundary(int N, double* source, double* curr, double* next, float delta) {
     for (int k = 1; k < N - 1; k++) {
         idx(next, N, k, 0, 0) = (2 * idx(curr, N, k, 0, 0 + 1)
@@ -72,16 +70,6 @@ void apply_von_neuman_boundary(int N, double* source, double* curr, double* next
     }
 }
 
-/**
- * @brief Perform one iteration of the poisson equation with optimised loops
- *
- * @param N the size of the array
- * @param source Pointer to the source term
- * @param curr Pointer to the current array
- * @param next Pointer to the next array (to update)
- * @param delta The delta
- *
- */
 void poisson_iteration_faster(int N, double* source, double* curr, double* next, float delta) {
     apply_const_boundary(N, next);
 
@@ -99,15 +87,6 @@ void poisson_iteration_faster(int N, double* source, double* curr, double* next,
     }
 }
 
-/**
- * @brief Perform one interation of the poisson equation
- *
- * @param N the size of the array
- * @param source Pointer to the source term
- * @param curr Pointer to the current array
- * @param next Pointer to the next array (to update)
- * @param delta The delta
- */
 void poisson_iteration_slow(int N, double* source, double* curr, double* next, float delta) {
     // Apply constant boundary
     for (int j = 0; j < N; j++) {
