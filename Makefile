@@ -3,7 +3,7 @@ all: poisson
 # -g outputs debugging information
 # -Wall enables all warnings
 # -pthread configures threading
-CFLAGS = -g -Wall -pthread
+CFLAGS = -g -Wall -pthread -D_XOPEN_SOURCE=600
 CC = gcc 
 
 poisson: poisson.c worker_thread.c

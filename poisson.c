@@ -42,8 +42,6 @@
 
 extern char* optarg;
 
-pthread_t single_thread;
-
 // Global flag
 // Set to true when operating in debug mode to enable verbose logging
 static bool debug = false;
@@ -251,6 +249,10 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
             N, iterations, threads, delta);
     }
 
+    pthread_t worker_threads[threads];
+    workerThread_t thread_info[threads];
+    pthread_barrier_t barrier;
+
     // Allocate some buffers to calculate the solution in
     double* curr = (double*)calloc(N * N * N, sizeof(double));
     double* next = (double*)calloc(N * N * N, sizeof(double));
@@ -268,30 +270,39 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
         }
     }
 
-    workerThread_t worker_info = {
-        .thread_id = 0,
+    pthread_barrier_init(&barrier, NULL, threads);
+    // Launch each of the new worker threads
+    for (int i = 0; i < threads; i++)
+    {
+        
+        // Fill in the arguments to the worker
+        thread_info[i].thread_id = i;
+        thread_info[i].N = N;
+        thread_info[i].source = source;
+        thread_info[i].curr = curr;
+        thread_info[i].next = next;
+        thread_info[i].delta = delta;
+        thread_info[i].iterations = iterations;
+        thread_info[i].k_start = 1 + ((N * i) / threads) ; // This is probably wrong
+        thread_info[i].k_end = -1 + (N * (i+1)) / threads; // This too
+        thread_info[i].j_start = 0;
+        thread_info[i].j_end = N;
+        thread_info[i].i_start = 0;
+        thread_info[i].i_end = N;
+        thread_info[i].barrier = &barrier;
 
-        .N = N,
-        .source = source,
-        .curr = curr,
-        .next = next,
-        .delta = delta,
-        .iterations = iterations,
-        .k_start = 1,
-        .k_end = N-1,
-        .j_start = 0,
-        .j_end = N,
-        .i_start = 0,
-        .i_end = N
-    };
+        // Create the worker thread
+        if (pthread_create (&worker_threads[i], NULL, &worker_thread, &thread_info[i]) != 0)
+        {
+            fprintf (stderr, "Error creating worker thread!\n");
+        }
+    }
 
-    pthread_create(&single_thread, NULL, worker_thread, &worker_info);
-
-    pthread_join(single_thread, NULL);
-
-
-
-
+    // Wait for all the threads to finish using join ()
+    for (int i = 0; i < threads; i++)
+    {
+        pthread_join (worker_threads[i], NULL);
+    }
 
     // Free one of the buffers and return the correct answer in the other.
     // The caller is now responsible for free'ing the returned pointer.
