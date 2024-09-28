@@ -73,13 +73,16 @@ void apply_von_neuman_boundary_slice(int N, double* source, double* curr, double
 }
 
 void poisson_iteration_inner_slice(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D) {
-    for (int k = slice_3D.k_start; k < slice_3D.k_end; k++) {
-        for (int j = slice_3D.j_start; j < slice_3D.j_end; j++) {
-            for (int i = slice_3D.i_start; i < slice_3D.i_end; i++) {
-                if (i == 0 || j == 0 || j == N - 1 || i == N - 1) {
-                    continue;
-                }
+    int j_start = slice_3D.j_start  != 0 ? slice_3D.j_start : 1;
+    int j_end = slice_3D.j_end != N ? slice_3D.j_end : N-1;
 
+    int i_start = slice_3D.i_start  != 0 ? slice_3D.i_start : 1;
+    int i_end = slice_3D.i_end != N ? slice_3D.i_end : N-1;
+    
+
+    for (int k = slice_3D.k_start; k < slice_3D.k_end; k++) {
+        for (int j = j_start; j < j_end; j++) {
+            for (int i = i_start; i < i_end; i++) {
                 idx(next, N, k, j, i) = (idx(curr, N, k, j, i + 1) + idx(curr, N, k, j, i - 1)
                     + idx(curr, N, k, j + 1, i) + idx(curr, N, k, j - 1, i)
                     + idx(curr, N, k + 1, j, i) + idx(curr, N, k - 1, j, i)
