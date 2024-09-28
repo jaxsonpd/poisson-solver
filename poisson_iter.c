@@ -100,12 +100,13 @@ void poisson_iteration_inner_slice(int N, double* source, double* curr, double* 
     int i_end = slice_3D.i_end != N ? slice_3D.i_end : N-1;
     
 
+
     for (int k = slice_3D.k_start; k < slice_3D.k_end; k++) {
         for (int j = j_start; j < j_end; j++) {
             for (int i = i_start; i < i_end; i++) {
                 idx(next, N, k, j, i) = (idx(curr, N, k, j, i + 1) + idx(curr, N, k, j, i - 1)
-                    + idx(curr, N, k, j + 1, i) + idx(curr, N, k, j - 1, i)
-                    + idx(curr, N, k + 1, j, i) + idx(curr, N, k - 1, j, i)
+                        + idx(curr, N, k, j + 1, i) + idx(curr, N, k, j - 1, i)
+                        + idx(curr, N, k + 1, j, i) + idx(curr, N, k - 1, j, i)
                     - delta * delta * idx(source, N, k, j, i)) / 6;
             }
         }

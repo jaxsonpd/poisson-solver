@@ -76,7 +76,7 @@ def main() -> None:
     print(f"Starting profiling with {nodes} nodes, {iterations} iterations, and up to {max_threads} threads")
 
     times = []
-    for thread in range(max_threads):
+    for thread in range(1, max_threads):
         times.append(execute_poisson(nodes, iterations, thread))
         if (thread % (max_threads/10) == 0):
             print(f"Thread {thread} Executed")
@@ -84,10 +84,10 @@ def main() -> None:
     with open(f"{filename}_n{nodes}_i{iterations}_t{max_threads}.csv", "w") as f:
         f.write("Number Threads, Time (s)\n")
 
-        for i in range(max_threads):
-            f.write(f"{i}, {times[i]}\n")
+        for i in range(1, max_threads):
+            f.write(f"{i}, {times[i-1]}\n")
 
-    plt.plot(np.arange(max_threads), np.array(times))
+    plt.plot(np.arange(1, max_threads), np.array(times))
     plt.title(f"{filename} poisson n: {nodes}, i: {iterations}, t: {max_threads}")
     plt.xlabel(f"num threads")
     plt.ylabel(f"seconds")

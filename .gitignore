@@ -9,3 +9,4 @@ threads
 cachegrind.out.*
 .vscode
 _minted-*/
+.venv/

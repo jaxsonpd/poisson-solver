@@ -106,12 +106,10 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
         thread_info[i].next = next;
         thread_info[i].delta = delta;
         thread_info[i].iterations = iterations;
-        // thread_info[i].k_start = 1 + ((N * i) / threads) ; // This is probably wrong
-        // thread_info[i].k_end = -1 + (N * (i+1)) / threads; // This too
+
         thread_info[i].slice_3D.k_start = i*thickness+1;
         int k_end = (i+1)*thickness+1;
         thread_info[i].slice_3D.k_end = k_end > (N-1) ? N-1 : k_end;
-        // printf("Thread: %d, k_start %d, k_end %d\n", i, thread_info[i].k_start, thread_info[i].k_end);
 
         thread_info[i].slice_3D.j_start = 0;
         thread_info[i].slice_3D.j_end = N;
