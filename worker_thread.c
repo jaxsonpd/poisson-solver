@@ -15,85 +15,44 @@
 
 #include "utils.h"
 
+#include "poisson_iter.h"
+
 #include "worker_thread.h"
+
+/**
+ * @brief Wait before performing memcopy_3D
+ *
+ */
+void wait_to_copy(workerThread_t* worker_info) {
+    pthread_barrier_wait(worker_info->barrier);
+}
+
+/**
+ * @brief Wait before starting new iteration
+ *
+ */
+void wait_to_start(workerThread_t* worker_info) {
+    pthread_barrier_wait(worker_info->barrier);
+}
 
 /**
  * @brief The worker thread function
  * @param pargs a WorkerThread_t pointer
  *
- * @return void* 
+ * @return void*
  */
 void* worker_thread(void* pargs) {
     workerThread_t* worker_info = (workerThread_t*)pargs;
     int N = worker_info->N;
 
     for (int n = 0; n < worker_info->iterations; n++) {
-        for (int k = worker_info->slice_3D.k_start; k < worker_info->slice_3D.k_end; k++) {
-            for (int j = worker_info->slice_3D.j_start; j < worker_info->slice_3D.j_end; j++) {
-                for (int i = worker_info->slice_3D.i_start; i < worker_info->slice_3D.i_end; i++) {
-                    if (i == 0 && j == 0) {
-                        idx(worker_info->next, N, k, j, i) = (2 * idx(worker_info->curr, N, k, j, i + 1)
-                            + 2 * idx(worker_info->curr, N, k, j + 1, i)
-                            + idx(worker_info->curr, N, k + 1, j, i) + idx(worker_info->curr, N, k - 1, j, i)
-                            - worker_info->delta * worker_info->delta * idx(worker_info->source, N, k, j, i)) / 6;
-                    } else if (i == N - 1 && j == N - 1) {
-                        idx(worker_info->next, N, k, j, i) = (2 * idx(worker_info->curr, N, k, j, i - 1)
-                            + 2 * idx(worker_info->curr, N, k, j - 1, i)
-                            + idx(worker_info->curr, N, k + 1, j, i) + idx(worker_info->curr, N, k - 1, j, i)
-                            - worker_info->delta * worker_info->delta * idx(worker_info->source, N, k, j, i)) / 6;
-                    } else if (i == 0 && j == N - 1) {
-                        idx(worker_info->next, N, k, j, i) = (2 * idx(worker_info->curr, N, k, j, i + 1)
-                            + 2 * idx(worker_info->curr, N, k, j - 1, i)
-                            + idx(worker_info->curr, N, k + 1, j, i) + idx(worker_info->curr, N, k - 1, j, i)
-                            - worker_info->delta * worker_info->delta * idx(worker_info->source, N, k, j, i)) / 6;
-                    } else if (i == N - 1 && j == 0) {
-                        idx(worker_info->next, N, k, j, i) = (2 * idx(worker_info->curr, N, k, j, i - 1)
-                            + 2 * idx(worker_info->curr, N, k, j + 1, i)
-                            + idx(worker_info->curr, N, k + 1, j, i) + idx(worker_info->curr, N, k - 1, j, i)
-                            - worker_info->delta * worker_info->delta * idx(worker_info->source, N, k, j, i)) / 6;
-                    } else if (i == 0) {
-                        idx(worker_info->next, N, k, j, i) = (2 * idx(worker_info->curr, N, k, j, i + 1)
-                            + idx(worker_info->curr, N, k, j + 1, i) + idx(worker_info->curr, N, k, j - 1, i)
-                            + idx(worker_info->curr, N, k + 1, j, i) + idx(worker_info->curr, N, k - 1, j, i)
-                            - worker_info->delta * worker_info->delta * idx(worker_info->source, N, k, j, i)) / 6;
-                    } else if (i == N - 1) {
-                        idx(worker_info->next, N, k, j, i) = (2 * idx(worker_info->curr, N, k, j, i - 1)
-                            + idx(worker_info->curr, N, k, j + 1, i) + idx(worker_info->curr, N, k, j - 1, i)
-                            + idx(worker_info->curr, N, k + 1, j, i) + idx(worker_info->curr, N, k - 1, j, i)
-                            - worker_info->delta * worker_info->delta * idx(worker_info->source, N, k, j, i)) / 6;
-                    } else if (j == 0) {
-                        idx(worker_info->next, N, k, j, i) = (idx(worker_info->curr, N, k, j, i + 1) + idx(worker_info->curr, N, k, j, i - 1)
-                            + 2 * idx(worker_info->curr, N, k, j + 1, i)
-                            + idx(worker_info->curr, N, k + 1, j, i) + idx(worker_info->curr, N, k - 1, j, i)
-                            - worker_info->delta * worker_info->delta * idx(worker_info->source, N, k, j, i)) / 6;
-                    } else if (j == N - 1) {
-                        idx(worker_info->next, N, k, j, i) = (idx(worker_info->curr, N, k, j, i + 1) + idx(worker_info->curr, N, k, j, i - 1)
-                            + 2 * idx(worker_info->curr, N, k, j - 1, i)
-                            + idx(worker_info->curr, N, k + 1, j, i) + idx(worker_info->curr, N, k - 1, j, i)
-                            - worker_info->delta * worker_info->delta * idx(worker_info->source, N, k, j, i)) / 6;
+        apply_von_neuman_boundary_slice(N, worker_info->source, worker_info->curr, worker_info->next, worker_info->delta, worker_info->slice_3D);
+        poisson_iteration_inner_slice(N, worker_info->source, worker_info->curr, worker_info->next, worker_info->delta, worker_info->slice_3D);
 
-                    } else {
-                        idx(worker_info->next, N, k, j, i) = (idx(worker_info->curr, N, k, j, i + 1) + idx(worker_info->curr, N, k, j, i - 1)
-                            + idx(worker_info->curr, N, k, j + 1, i) + idx(worker_info->curr, N, k, j - 1, i)
-                            + idx(worker_info->curr, N, k + 1, j, i) + idx(worker_info->curr, N, k - 1, j, i)
-                            - worker_info->delta * worker_info->delta * idx(worker_info->source, N, k, j, i)) / 6;;
-                    }
-                    // idx(worker_info->next, N, k, j, i) = idx(worker_info->curr, N, k, j, i);
-                    // Assign the value from curr to next
-
-
-                }
-            }
-        }
-        pthread_barrier_wait(worker_info->barrier);
-        // TODO move to custom function for worker indexes
-        // memcpy(worker_info->curr, worker_info->next, N * N * N * sizeof(double));
-        // memory_allocation1(worker_info, N);
+        wait_to_copy(worker_info);
         memcopy_3D(N, worker_info->curr, worker_info->next, worker_info->slice_3D);
-        // TODO do semaphore stuff
-        pthread_barrier_wait(worker_info->barrier);
-        // printf("Thread %d done waiting.\n",worker_info->thread_id);
-        
+        wait_to_start(worker_info);
+
     }
 
     return NULL;

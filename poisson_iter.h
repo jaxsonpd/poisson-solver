@@ -1,4 +1,4 @@
-/** 
+/**
  * @file poisson_iter.h
  * @author Jack Duignan (Jdu80@uclive.ac.nz)
  * @date 2024-09-26
@@ -31,21 +31,23 @@ void apply_const_boundary(int N, double* next);
  * @param curr the current state of the calculation
  * @param next the next array to populate
  * @param delta the delta
+ * @param slice_3D The slice of data to perform it on
  *
  */
-void apply_von_neuman_boundary(int N, double* source, double* curr, double* next, float delta);
+void apply_von_neuman_boundary_slice(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D);
 
 /**
- * @brief Perform one iteration of the poisson equation with optimised loops
+ * @brief Perform one iteration of the poisson equation only on the inner squares
  *
  * @param N the size of the array
  * @param source Pointer to the source term
  * @param curr Pointer to the current array
  * @param next Pointer to the next array (to update)
  * @param delta The delta
+ * @param slice_3D The slice of data to perform it on
  *
  */
-void poisson_iteration_faster(int N, double* source, double* curr, double* next, float delta);
+void poisson_iteration_inner_slice(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D);
 
 /**
  * @brief Perform one interation of the poisson equation
