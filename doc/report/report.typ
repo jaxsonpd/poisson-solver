@@ -44,21 +44,39 @@
   Jack Duignan, Isaac Cone, Daniel Hawes Group 13
 ])
 
-= Architecture Overview
+= Architecture Overview - hard - Isaac
 
-= Multithreading
+big picture
 
-= Cache
+ALU
 
-= Profiling
+FPL
 
-= Compiler Optimisation
+Cache
 
-= Individual Topic 1 Jack Duignan
+Intruction decodeing etc.
 
-= Individual Topic 2 Isaac Cone
+= Multithreading - easy - Daniel
 
-= Individual Topic 3 Daniel Hawes
+row selection 
+memcopy
+barrier
+
+= Cache - hard
+
+= Profiling - easy - Jack
+
+ - Python script
+
+ - gprof outputs and how they were used
+ 
+= Compiler Optimisation - easy 
+
+= Individual Topic 1 Jack Duignan - Branch Prediction
+
+= Individual Topic 2 Isaac Cone - GPU
+
+= Individual Topic 3 Daniel Hawes - SIMD
 
 #pagebreak()
 #bibliography("bibliography.bib", title: "References", style: "institute-of-electrical-and-electronics-engineers")

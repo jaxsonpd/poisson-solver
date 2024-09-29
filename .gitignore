@@ -8,3 +8,5 @@ threads
 cachegrind.out.*
 
 _minted-*/
+
+.venv/
