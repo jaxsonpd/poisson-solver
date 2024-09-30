@@ -1,5 +1,5 @@
 #set document(
-  title: [A 6-DOF Flight Mechanics Simulation of the Lockheed Martin P-3 Orion],
+  title: [ENCE464 T2 Poisson Assignment Group 13],
   author: "Jack Duignan",
   date: auto
 )
@@ -41,7 +41,11 @@
 ])
 
 #align(center, text(18pt)[
-  Jack Duignan, Isaac Cone, Daniel Hawes Group 13
+  *Group 13:* Jack Duignan, Isaac Cone, Daniel Hawes
+])
+
+#align(center, text(12pt)[
+  1-10-2024
 ])
 
 = Architecture Overview - hard - Isaac
@@ -71,25 +75,53 @@ barrier
 
 Profiling was used throughout all stages of this projects development. This was done to identify which areas of the program where the slowest and how often these slow areas where called. From these results optimisations where made to the code to reduce execution time. When selecting areas of the code to optimise the sections called most often were prioritised as these give a larger performance benefit then optimising slower less frequent functions. To make profiling easier the various components of the code where compartmentalised into functions, while this does add some execution time (due to stack overheads) it allows the profiling tool gprof to provide more granular results. 
 
-Profiling was conducted on both optimised and non-optimised code to gain a wholistic understanding of the programs excution. The non-optimised program was profiled and used in the initial development stage and once the program was at an acceptable level profiling switched to using the optimised code as this was the more effient source. A breakdown of the execution times and call counts for a non-optimised run of the program with a 101 node cube over 300 iterations using 30 threads can be seen in .
+Profiling was conducted on both optimised and non-optimised code to gain a wholistic understanding of the programs excution. The non-optimised program was profiled and used in the initial development stage and once the program was at an acceptable level profiling switched to using the optimised code as this was the more effient source. A breakdown of the execution times and call counts for a non-optimised run of the program with a 201 node cube over 300 iterations using 20 threads can be seen in #ref(<tab:non-optimised-profile>). The result of profiling using 03 optimised code on the same cube size as before can be found in #ref(<tab:optimised-profile>).
 
 #figure(
-  caption: [The key specifications of the P-3C Orion #cite(<P3LockheedSpecs:online>) #cite(<NASAP3Orion:techreport>).],
+  caption: [GProf results for a non-optimised run of the program with 201 nodes 300 iterations and 30 threads.],
   table(
-  columns: (35%, 25%),
-  align: (left, center),
-  table.header([Parameter], [Value]),
+  columns: (35%, 10%, 10%),
+  align: (left, center, center),
+  table.header([Function], [Call Count], [Time per call (ms)]),
   table.hline(stroke: 1pt),
-  [Dry weight], [$35,017 "kg"$],
-  [Maxium take-off weight], [$64,410 "Kg"$],
-  [Long-Range Cruise Operating Point], [$25,000 "ft"$ at $350 "KTAS"$],
-  [Patrol Operating Point], [$15,000 "ft"$ at $203 "KTAS"$],
-  [Length], [$35.6 " m"$],
-  [Wingspan], [$30.4 " m"$],
-  [Maximum Endurance], [$16 "hours"$],
-  [Engines], [4 x T56-A-14 Allison],
+  [`poisson_iteration_inner_slice`], [5965], [1.25],
+  [`memcopy_3D`], [5977], [0.61],
+  [`apply_von_neuman_boundary_slice`], [5956], [0.05],
+  [Barrier waits cumulative], [11945], [0],
+  [Setup], [0], [0],
   table.hline(stroke: 1pt),
-)) <tab:P3-Orion-Specs>
+)) <tab:non-optimised-profile>
+
+#figure(
+  caption: [GProf results for a O3 optimised run of the program with 201 nodes 300 iterations and 30 threads.],
+  table(
+  columns: (35%, 10%, 10%),
+  align: (left, center, center),
+  table.header([Function], [Call Count], [Time per call (us)]),
+  table.hline(stroke: 1pt),
+  [`poisson_iteration_inner_slice`], [5958], [676.40 ],
+  [`memcopy_3D`], [5971], [410.32 ],
+  [`apply_von_neuman_boundary_slice`], [5926], [37.12],
+  [Barrier waits cumulative], [N/A], [N/A],
+  [Setup], [0], [0],
+  table.hline(stroke: 1pt),
+)) <tab:optimised-profile>
+
+The results found in #ref(<tab:non-optimised-profile>) and #ref(<tab:optimised-profile>, supplement: "") show that in both runs the largest time cost is the iteration over the inner slice of the cube. This is expected as this the largest iteration over the nodes in the cube in the program. The next highest is the memcopy that occurs at the end of each iteration. Third is the application of the Von Neuman boundary. In earlier iterations of the program the Von Neuman boundary was called at every inner loop of the main poission iteration. Based on profiling the team was able to identify this as a bottle neck and move the function to its own self contained iteration that only is called once. 
+
+One interesting finding of the profiling was how little time is spent at the synchronisation barriers in the code. The team was originally concered that these will cause large delays in the program as different threads took longer to excute. By using profiling this was found to not be the case and thus didn't need to be optimised. 
+
+The result of running the completed program over a range of cube sizes for 300 iterations using 20 threads can be found in #ref(<fig:complete-cube-run>).
+
+#figure(
+  image("figures/profile1-10-mn901-i300-t-20.png", width: 60%),
+  caption: [
+    A complete run of the firmware across all cube sizes with 300 iterations and 20 threads.
+  ],
+) <fig:complete-cube-run>
+
+
+
 
 
 - Python script

@@ -19,6 +19,10 @@ poisson.s: poisson
 profile: poisson.c worker_thread.c utils.c poisson_iter.c
 	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -o poisson-profile
 
+.PHONY: profile-o
+profile-o: poisson.c worker_thread.c utils.c poisson_iter.c
+	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -O3 -o poisson-profile-opt
+
 .PHONY: test
 test: poisson
 	./test.sh
