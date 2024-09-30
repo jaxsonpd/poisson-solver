@@ -1,12 +1,12 @@
 poisson
 poisson.s
+poisson-profile
 threads
 
 *.aux
 *.log
 *.out
 cachegrind.out.*
-
+.vscode
 _minted-*/
-
 .venv/
