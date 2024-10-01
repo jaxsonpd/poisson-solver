@@ -57,7 +57,7 @@ void* worker_thread(void* pargs) {
             worker_comms_set(WORKERS_READY_TO_COPY);
 
             while (worker_comms_get() != COPY_COMPLETE) {
-                usleep(1000);
+                usleep(10);
             }
         }
         // memcopy_3D(N, worker_info->curr, worker_info->next, worker_info->slice_3D);

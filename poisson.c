@@ -120,7 +120,7 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
 
     for (int n = 0; n < iterations; n++) {
         while (worker_comms_get() != WORKERS_READY_TO_COPY) {
-            usleep(1000);
+            usleep(10);
         }
 
         for (int i = 0; i < threads; i++) {
