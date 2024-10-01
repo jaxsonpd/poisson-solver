@@ -113,21 +113,10 @@ void poisson_iteration_inner_slice(int N, double* source, double* curr, double* 
     }
 }
 
-void poisson_iteration_slow(int N, double* source, double* curr, double* next, float delta) {
-    // Apply constant boundary
-    for (int j = 0; j < N; j++) {
-        for (int i = 0; i < N; i++) {
-            idx(next, N, 0, j, i) = TOP_BOUNDARY_COND;
-            idx(next, N, N - 1, j, i) = BOTTOM_BOUNDARY_COND;
-        }
-    }
-
-    // Apply Neumann Boundary
-
-
-    for (int k = 1; k < N - 1; k++) {
-        for (int j = 0; j < N; j++) {
-            for (int i = 0; i < N; i++) {
+void poisson_iteration_slow(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D) {
+    for (int k = slice_3D.k_start; k < slice_3D.k_end; k++) {
+        for (int j = slice_3D.j_start; j < slice_3D.j_end; j++) {
+            for (int i = slice_3D.i_start; i < slice_3D.i_end; i++) {
                 if (i == 0 && j == 0) {
                     idx(next, N, k, j, i) = (2 * idx(curr, N, k, j, i + 1)
                         + 2 * idx(curr, N, k, j + 1, i)

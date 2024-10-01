@@ -50,15 +50,16 @@ void apply_von_neuman_boundary_slice(int N, double* source, double* curr, double
 void poisson_iteration_inner_slice(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D);
 
 /**
- * @brief Perform one interation of the poisson equation
+ * @brief Perform one interation of the poisson equation (without constant boundaries)
  *
  * @param N the size of the array
  * @param source Pointer to the source term
  * @param curr Pointer to the current array
  * @param next Pointer to the next array (to update)
  * @param delta The delta
+ * @param slice_3D The slice of data to perform it on
  */
-void poisson_iteration_slow(int N, double* source, double* curr, double* next, float delta);
+void poisson_iteration_slow(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D);
 
 
 #endif // POISSON_ITER_H

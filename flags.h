@@ -14,6 +14,8 @@
 #include <stdbool.h>
 
 // #define DEBUG
+#define NO_MEMCOPY // Whether to use memcopy or thread comms
+#define SPLIT_ITERATION // whether to split the poisson iteration into its parts
 
 
 #endif // FLAGS_H

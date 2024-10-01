@@ -118,6 +118,7 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
         }
     }
 
+#if defined(NO_MEMCOPY)
     for (int n = 0; n < iterations; n++) {
         while (worker_comms_get() != WORKERS_READY_TO_COPY) {
             usleep(10);
@@ -130,6 +131,7 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
         }
         worker_comms_set(COPY_COMPLETE);
     }
+#endif // NO_MEMCOPY
 
     // Wait for all the threads to finish using join ()
     for (int i = 0; i < threads; i++)

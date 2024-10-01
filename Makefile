@@ -6,7 +6,7 @@ all: poisson
 CFLAGS = -g -Wall -lpthread -D_XOPEN_SOURCE=600
 LDLIBS = -lm
 CC = gcc 
-SOURCE = poisson.c worker_thread.c utils.c poisson_iter.c worker_thread_comms.c
+SOURCE = poisson.c worker_thread.c utils.c poisson_iter.c worker_thread_comms.c flags.h
 
 poisson: $(SOURCE)
 
