@@ -1,8 +1,4 @@
 {
-    "files.eol": "\n",
-    "files.associations": {
-        "stdbool.h": "c",
-        "worker_thread_comms.h": "c",
-        "pthread.h": "c"
-    }
+  "files.eol": "\n",
+  "C_Cpp_Runner.msvcBatchPath": ""
 }
