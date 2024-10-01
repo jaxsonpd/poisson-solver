@@ -9,6 +9,7 @@ import os
 import time
 import matplotlib.pyplot as plt
 import numpy as np
+import datetime
 
 cube_sizes = [101, 201, 301, 401, 501, 601, 701, 801, 901]
 
@@ -86,6 +87,7 @@ def main() -> None:
         print(f"Node {nodes} executed, time: {times[-1]}")
 
     with open(f"{filename}_mn{max_nodes}_i{iterations}_t{threads}.csv", "w") as f:
+        f.write(f"Time Profile - {datetime.datetime.now()}\n")
         f.write("Cube Size, Time (s)\n")
 
         for i in range(0, len(selected_cubes)):

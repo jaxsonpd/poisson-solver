@@ -9,6 +9,7 @@ import os
 import time
 import matplotlib.pyplot as plt
 import numpy as np
+import datetime
 
 def setup_cmd_args() ->argparse.ArgumentParser:
     """
@@ -82,6 +83,7 @@ def main() -> None:
             print(f"Thread {thread} Executed")
 
     with open(f"{filename}_n{nodes}_i{iterations}_mt{max_threads}.csv", "w") as f:
+        f.write(f"Thread Profile - {datetime.datetime.now()}\n")
         f.write("Number Threads, Time (s)\n")
 
         for i in range(1, max_threads):
