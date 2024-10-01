@@ -81,14 +81,14 @@ def main() -> None:
         if (thread % (max_threads/10) == 0):
             print(f"Thread {thread} Executed")
 
-    with open(f"{filename}_n{nodes}_i{iterations}_t{max_threads}.csv", "w") as f:
+    with open(f"{filename}_n{nodes}_i{iterations}_mt{max_threads}.csv", "w") as f:
         f.write("Number Threads, Time (s)\n")
 
         for i in range(1, max_threads):
             f.write(f"{i}, {times[i-1]}\n")
 
     plt.plot(np.arange(1, max_threads), np.array(times))
-    plt.title(f"{filename} poisson n: {nodes}, i: {iterations}, t: {max_threads}")
+    plt.title(f"{filename} threads poisson n: {nodes}, i: {iterations}, t: {max_threads}")
     plt.xlabel(f"num threads")
     plt.ylabel(f"seconds")
     if (max_threads < 5):

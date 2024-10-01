@@ -21,6 +21,10 @@ profile: poisson.c worker_thread.c utils.c poisson_iter.c
 
 poisson-cuda: poisson_cuda.cu cuda_worker.cu
 	nvcc $^ -o $@  
+	
+.PHONY: profile-o
+profile-o: poisson.c worker_thread.c utils.c poisson_iter.c
+	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -O3 -o poisson-profile-opt
 
 .PHONY: test
 test: poisson
