@@ -28,13 +28,13 @@ void worker_comms_deinit(void) {
 void worker_comms_set(workerCommsFlag_t flag_value) {
     pthread_mutex_lock(&worker_comms_mutex);
     worker_comms_flag = flag_value;
-    pthread_mutex_unclock(&worker_comms_mutex);
+    pthread_mutex_unlock(&worker_comms_mutex);
 }
 
 workerCommsFlag_t worker_comms_get(void) {
     pthread_mutex_lock(&worker_comms_mutex);
     workerCommsFlag_t flag_value = worker_comms_flag;
-    pthread_mutex_unclock(&worker_comms_mutex);
+    pthread_mutex_unlock(&worker_comms_mutex);
 
     return flag_value;
 }

@@ -122,8 +122,13 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
         while (worker_comms_get() != WORKERS_READY_TO_COPY) {
             usleep(1000);
         }
-        
 
+        for (int i = 0; i < threads; i++) {
+            double* temp = thread_info[i].curr;
+            thread_info[i].curr = thread_info[i].next;
+            thread_info[i].next = temp;
+        }
+        worker_comms_set(COPY_COMPLETE);
     }
 
     // Wait for all the threads to finish using join ()
@@ -187,7 +192,7 @@ int main(int argc, char** argv) {
             threads = atoi(optarg);
             break;
         case 'd':
-            #define DEBUG
+            // #define DEBUG
             break;
         default:
             fprintf(stderr, "Usage: poisson [-n size] [-x source x-poisition] [-y source y-position] [-z source z-position] [-a source amplitude]  [-i iterations] [-t threads] [-d] (for debug mode)\n");

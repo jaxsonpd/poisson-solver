@@ -7,7 +7,7 @@ CFLAGS = -g -Wall -lpthread -D_XOPEN_SOURCE=600
 LDLIBS = -lm
 CC = gcc 
 
-poisson: poisson.c worker_thread.c utils.c poisson_iter.c
+poisson: poisson.c worker_thread.c utils.c poisson_iter.c worker_thread_comms.c
 
 .PHONY: disassembly
 disassembly: poisson.s
