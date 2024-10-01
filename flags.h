@@ -1,4 +1,4 @@
-/** 
+/**
  * @file flags.h
  * @author Jack Duignan (Jdu80@uclive.ac.nz)
  * @date 2024-09-26
@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define DEBUG
+// #define DEBUG
 
 
 #endif // FLAGS_H
