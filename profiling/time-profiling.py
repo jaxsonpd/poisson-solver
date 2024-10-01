@@ -60,7 +60,7 @@ def execute_poisson(nodes: int, iterations: int, threads: int) -> float:
     """
     start_time = time.time()
 
-    os.system(f"./poisson -n {nodes} -i {iterations} -t {threads} > /dev/null")
+    os.system(f"../poisson-cuda -n {nodes} -i {iterations} -t {threads} > /dev/null")
 
     return time.time() - start_time
 

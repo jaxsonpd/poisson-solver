@@ -96,6 +96,7 @@ double* poisson_mixed(int N, double* source, int iterations, float delta) {
 
     // Apply constant boundary
     apply_const_boundary(N, next);
+    // apply_const_boundary(N, curr);
 
     // Allocate device memory
     double *d_source, *d_curr, *d_next;
@@ -116,6 +117,7 @@ double* poisson_mixed(int N, double* source, int iterations, float delta) {
     for (int iter = 0; iter < iterations; iter++) {
         // Launch the boundary condition kernel
         apply_von_neuman_boundary_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
+
         // Launch the inner iteration kernel
         poisson_iteration_inner_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
 
@@ -143,7 +145,7 @@ double* poisson_mixed(int N, double* source, int iterations, float delta) {
 
 int main(int argc, char** argv) {
     // Default settings for solver
-    int iterations = 10;
+    int iterations = 300;
     int n = 5;
     int threads = 3;
     float delta = 1;
