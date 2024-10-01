@@ -10,8 +10,8 @@
 )
 
 #set text(
-  font: "New Computer Modern",
-  size: 10pt
+  font: "Inria Serif",
+  size: 12pt
 )
 
 #set par(
@@ -24,6 +24,7 @@
 
 // use #show: appendix to being appendices
 // #outline(target: heading.where(supplement: [Appendix]), title: [Appendix])
+// 
 #let appendix(body) = {
   set heading(numbering: "A", supplement: [Appendix])
   counter(heading).update(0)
@@ -37,16 +38,20 @@
 ): set figure.caption(position: top)
 
 #align(center, text(18pt)[
-  ENCE464 Assignment 2
+  ENCE464 Assignment 2: Computer Architecture
 ])
 
-#align(center, text(18pt)[
-  *Group 13:* Jack Duignan, Isaac Cone, Daniel Hawes
+#align(center, text(14pt)[
+  Group 13: Jack Duignan, Isaac Cone, Daniel Hawes
 ])
 
-#align(center, text(12pt)[
-  1-10-2024
-])
+= Architecture Overview
+The Central Processing Unit (CPU) described in this section is the AMD Ryzen 9 6900HX. Released in 2022, this CPU 8 identical cores with 2 threads per core for a total of 16 logical cores. This architecture is shown in @fig1 and will be described in further depth. 
+#figure(image("./fig/cpu_topology.png", width: 60%), caption: "Central Processing Unit (CPU) architecture for the x86 AMD Ryzen 9 6900HX.")<fig1>
+
+== Cores
+
+== Memory Caching
 
 = Architecture Overview - hard - Isaac
 
