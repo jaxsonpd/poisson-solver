@@ -19,6 +19,9 @@ poisson.s: poisson
 profile: poisson.c worker_thread.c utils.c poisson_iter.c
 	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -o poisson-profile
 
+poisson-cuda: poisson_cuda.cu cuda_worker.cu
+	nvcc $^ -o $@  
+
 .PHONY: test
 test: poisson
 	./test.sh

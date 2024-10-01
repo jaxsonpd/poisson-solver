@@ -8,9 +8,9 @@
 #include <math.h>
 
 #include "utils.h"
-#include "poisson_iter.h"
+// #include "poisson_iter.h"
 
-#include "cuda_worker.h"
+#include "cuda_worker.cuh"
 
 // CUDA runtime
 #include <cuda_runtime.h>
@@ -56,6 +56,15 @@ static bool debug = false;
 const double top_boundary_cond = -1; // V The top dirlec boundary condition
 const double bottom_boundary_cond = 1; // V The bottom dirlec boundary condition
 
+void apply_const_boundary(int N, double* next) {
+    for (int j = 0; j < N; j++) {
+        for (int i = 0; i < N; i++) {
+            idx(next, N, 0, j, i) = top_boundary_cond;
+            idx(next, N, N - 1, j, i) = bottom_boundary_cond;
+        }
+    }
+}
+
 /**
  * @brief Solve Poissons equation for a given cube with Dirichlet boundary
  * conditions on all sides.
@@ -98,17 +107,17 @@ double* poisson_mixed(int N, double* source, int iterations, float delta) {
     cudaMemcpy(d_source, source, N * N * N * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_curr, next, N * N * N * sizeof(double), cudaMemcpyHostToDevice);
 
-    dim3 blockSize(8, 8, 8);  // You can adjust the block size as needed
-    dim3 gridSize((N + blockSize.x - 1) / blockSize.x, 
-                  (N + blockSize.y - 1) / blockSize.y, 
-                  (N + blockSize.z - 1) / blockSize.z);
+    dim3 threadsPerBlock(8, 8, 8);  // You can adjust the block size as needed
+    dim3 numBlocks((N + threadsPerBlock.x - 1) / threadsPerBlock.x, 
+                  (N + threadsPerBlock.y - 1) / threadsPerBlock.y, 
+                  (N + threadsPerBlock.z - 1) / threadsPerBlock.z);
 
     // Main iteration loop
     for (int iter = 0; iter < iterations; iter++) {
         // Launch the boundary condition kernel
-        apply_von_neuman_boundary_slice<8><<<gridSize, blockSize>>>(N, d_source, d_curr, d_next, delta);
+        apply_von_neuman_boundary_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
         // Launch the inner iteration kernel
-        poisson_iteration_inner_slice<8><<<gridSize, blockSize>>>(N, d_source, d_curr, d_next, delta);
+        poisson_iteration_inner_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
 
         // Swap pointers
         double* temp = d_curr;
