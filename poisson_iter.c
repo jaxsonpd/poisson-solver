@@ -33,7 +33,7 @@ void apply_von_neuman_boundary_slice(int N, double* source, double* curr, double
                 - delta * delta * idx(source, N, k, 0, 0)) / 6;
         }
 
-        if (slice_3D.j_end == N && slice_3D.j_end == N) {
+        if (slice_3D.j_end == N && slice_3D.i_end == N) {
             idx(next, N, k, N - 1, N - 1) = (2 * idx(curr, N, k, N - 1, N - 1 - 1)
                 + 2 * idx(curr, N, k, N - 1 - 1, N - 1)
                 + idx(curr, N, k + 1, N - 1, N - 1) + idx(curr, N, k - 1, N - 1, N - 1)
@@ -47,7 +47,7 @@ void apply_von_neuman_boundary_slice(int N, double* source, double* curr, double
                 - delta * delta * idx(source, N, k, N - 1, 0)) / 6;
         }
 
-        if (slice_3D.j_start == 0 && slice_3D.j_end == N) {
+        if (slice_3D.j_start == 0 && slice_3D.i_end == N) {
             idx(next, N, k, 0, N - 1) = (2 * idx(curr, N, k, 0, N - 1 - 1)
                 + 2 * idx(curr, N, k, 0 + 1, N - 1)
                 + idx(curr, N, k + 1, 0, N - 1) + idx(curr, N, k - 1, 0, N - 1)
