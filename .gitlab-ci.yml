@@ -4,7 +4,7 @@ build-job:
   stage: build
   script:
     - gcc --version
-    - gcc -O3 -o poisson poisson.c -lpthread
+    - make poisson
   artifacts:
     paths:
     - poisson

@@ -45,6 +45,15 @@
   Group 13: Jack Duignan, Isaac Cone, Daniel Hawes
 ])
 
+The result of running the completed program over a range of cube sizes for 300 iterations using 20 threads can be found in #ref(<fig:complete-cube-run>).
+
+#figure(
+  image("figures/profile1-10-mn901-i300-t-20.png", width: 60%),
+  caption: [
+    A complete run of the firmware across all cube sizes with 300 iterations and 20 threads.
+  ],
+) <fig:complete-cube-run>
+
 = Architecture Overview
 The Central Processing Unit (CPU) described in this section is the AMD Ryzen 9 6900HX. Released in 2022, this CPU 8 identical cores with 2 threads per core for a total of 16 logical cores. The CPU uses the x86-64 instruction set architecture. The CPU structure is shown in @fig1.
 
@@ -81,7 +90,7 @@ barrier
 
 Profiling was used throughout all stages of this projects development. This was done to identify which areas of the program where the slowest and how often these slow areas where called. From these results optimisations where made to the code to reduce execution time. When selecting areas of the code to optimise the sections called most often were prioritised as these give a larger performance benefit then optimising slower less frequent functions. To make profiling easier the various components of the code where compartmentalised into functions, while this does add some execution time (due to stack overheads) it allows the profiling tool gprof to provide more granular results. 
 
-Profiling was conducted on both optimised and non-optimised code to gain a wholistic understanding of the programs excution. The non-optimised program was profiled and used in the initial development stage and once the program was at an acceptable level profiling switched to using the optimised code as this was the more effient source. A breakdown of the execution times and call counts for a non-optimised run of the program with a 201 node cube over 300 iterations using 20 threads can be seen in #ref(<tab:non-optimised-profile>). The result of profiling using 03 optimised code on the same cube size as before can be found in #ref(<tab:optimised-profile>).
+Profiling was conducted on both optimised and non-optimised code to gain a wholistic understanding of the programs execution. The non-optimised program was profiled and used in the initial development stage and once the program was at an acceptable level profiling switched to using the optimised code as this was the more effient source. A breakdown of the execution times and call counts for a non-optimised run of the program with a 201 node cube over 300 iterations using 20 threads can be seen in #ref(<tab:non-optimised-profile>). The result of profiling using 03 optimised code on the same cube size as before can be found in #ref(<tab:optimised-profile>).
 
 #figure(
   caption: [GProf results for a non-optimised run of the program with 201 nodes 300 iterations and 30 threads.],
@@ -117,15 +126,6 @@ The results found in #ref(<tab:non-optimised-profile>) and #ref(<tab:optimised-p
 
 One interesting finding of the profiling was how little time is spent at the synchronisation barriers in the code. The team was originally concered that these will cause large delays in the program as different threads took longer to excute. By using profiling this was found to not be the case and thus didn't need to be optimised. 
 
-The result of running the completed program over a range of cube sizes for 300 iterations using 20 threads can be found in #ref(<fig:complete-cube-run>).
-
-#figure(
-  image("figures/profile1-10-mn901-i300-t-20.png", width: 60%),
-  caption: [
-    A complete run of the firmware across all cube sizes with 300 iterations and 20 threads.
-  ],
-) <fig:complete-cube-run>
-
 
 
 
@@ -139,6 +139,14 @@ The result of running the completed program over a range of cube sizes for 300 i
 
 #pagebreak()
 = Individual Topic 1 Jack Duignan - Branch Prediction
+
+- WHat is branch Prediction
+
+- Branch prediction errors
+
+- Changing of program
+
+- Results of changing
 
 #pagebreak()
 = Individual Topic 2 Isaac Cone - GPU
