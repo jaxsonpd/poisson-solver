@@ -11,7 +11,7 @@
 
 #set text(
   font: "Inria Serif",
-  size: 10pt
+  size: 12pt
 )
 
 #set par(
@@ -24,6 +24,7 @@
 
 // use #show: appendix to being appendices
 // #outline(target: heading.where(supplement: [Appendix]), title: [Appendix])
+// 
 #let appendix(body) = {
   set heading(numbering: "A", supplement: [Appendix])
   counter(heading).update(0)
@@ -37,7 +38,7 @@
 ): set figure.caption(position: top)
 
 #align(center, text(18pt)[
-  ENCE464 Assignment 2
+  ENCE464 Assignment 2: Computer Architecture
 ])
 
 #align(center, text(18pt)[
@@ -45,7 +46,8 @@
 ])
 
 = Architecture Overview
-
+The CPU
+#figure(image("./fig/cpu_topology.png", width: 60%), caption: "Central Processing Unit (CPU) architecture for the x86 AMD Ryzen 9 6900HX.")
 = Multithreading
 
 = Cache
