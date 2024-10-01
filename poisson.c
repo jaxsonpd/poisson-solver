@@ -9,6 +9,8 @@
 
 #include "utils.h"
 #include "poisson_iter.h"
+#include "flags.h"
+#include "worker_thread_comms.h"
 
 #include "worker_thread.h"
 
@@ -44,14 +46,6 @@
 
 extern char* optarg;
 
-// Global flag
-// Set to true when operating in debug mode to enable verbose logging
-static bool debug = false;
-
-// Statics
-const double top_boundary_cond = -1; // V The top dirlec boundary condition
-const double bottom_boundary_cond = 1; // V The bottom dirlec boundary condition
-
 /**
  * @brief Solve Poissons equation for a given cube with Dirichlet boundary
  * conditions on all sides.
@@ -64,14 +58,14 @@ const double bottom_boundary_cond = 1; // V The bottom dirlec boundary condition
  * @return double*      Solution to Poissons equation.  Caller must free.
  */
 double* poisson_mixed(int N, double* source, int iterations, int threads, float delta) {
-    if (debug) {
-        printf("Starting solver with:\n"
-            "n = %i\n"
-            "iterations = %i\n"
-            "threads = %i\n"
-            "delta = %f\n",
-            N, iterations, threads, delta);
-    }
+#ifdef DEBUG
+    printf("Starting solver with:\n"
+        "n = %i\n"
+        "iterations = %i\n"
+        "threads = %i\n"
+        "delta = %f\n",
+        N, iterations, threads, delta);
+#endif // DEBUG
 
     pthread_t worker_threads[threads];
     workerThread_t thread_info[threads];
@@ -90,7 +84,7 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
     apply_const_boundary(N, next);
 
     pthread_barrier_init(&barrier, NULL, threads);
-
+    worker_comms_init();
     
 
     int thickness = ceil((N-2)/(float)threads);
@@ -124,6 +118,19 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
         }
     }
 
+    for (int n = 0; n < iterations; n++) {
+        while (worker_comms_get() != WORKERS_READY_TO_COPY) {
+            usleep(10);
+        }
+
+        for (int i = 0; i < threads; i++) {
+            double* temp = thread_info[i].curr;
+            thread_info[i].curr = thread_info[i].next;
+            thread_info[i].next = temp;
+        }
+        worker_comms_set(COPY_COMPLETE);
+    }
+
     // Wait for all the threads to finish using join ()
     for (int i = 0; i < threads; i++)
     {
@@ -133,10 +140,11 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
     // Free one of the buffers and return the correct answer in the other.
     // The caller is now responsible for free'ing the returned pointer.
     free(next);
+    worker_comms_deinit();
 
-    if (debug) {
-        printf("Finished solving.\n");
-    }
+#ifdef DEBUG
+    printf("Finished solving.\n");
+#endif // DEBUG
 
     return (double*)curr;
 }
@@ -184,7 +192,7 @@ int main(int argc, char** argv) {
             threads = atoi(optarg);
             break;
         case 'd':
-            debug = true;
+            // #define DEBUG
             break;
         default:
             fprintf(stderr, "Usage: poisson [-n size] [-x source x-poisition] [-y source y-position] [-z source z-position] [-a source amplitude]  [-i iterations] [-t threads] [-d] (for debug mode)\n");
@@ -219,9 +227,10 @@ int main(int argc, char** argv) {
     double* result = poisson_mixed(n, source, iterations, threads, delta);
 
     // Print out the middle slice of the cube for validation
-    if (debug) {
-        printf("--MIDDLE--\n");
-    }
+#ifdef DEBUG
+    printf("--MIDDLE--\n");
+#endif // DEBUG
+
     for (int y = 0; y < n; ++y) {
         for (int x = 0; x < n; ++x) {
             printf("%0.5f ", result[((n / 2) * n + y) * n + x]);
