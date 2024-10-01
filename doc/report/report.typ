@@ -1,6 +1,6 @@
 #set document(
-  title: [A 6-DOF Flight Mechanics Simulation of the Lockheed Martin P-3 Orion],
-  author: "Jack Duignan",
+  title: [Computer Architecture],
+  author: "JD IC DH",
   date: auto
 )
 
@@ -10,7 +10,7 @@
 )
 
 #set text(
-  font: "New Computer Modern",
+  font: "Inria Serif",
   size: 10pt
 )
 
