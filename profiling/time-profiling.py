@@ -60,6 +60,28 @@ def execute_poisson(nodes: int, iterations: int, threads: int) -> float:
     """
     start_time = time.time()
 
+    os.system(f"../poisson -n {nodes} -i {iterations} -t {threads} > /dev/null")
+
+    return time.time() - start_time
+
+def execute_poisson_cuda(nodes: int, iterations: int, threads: int) -> float:
+    """
+    Execute one poisson calculation
+
+    ### Params:
+    nodes
+        Number of nodes to simulate
+    iterations
+        Number of iterations to complete
+    threads
+        Number of threads to use
+
+    ### Returns:
+    float
+        The number of second to perform the iteration
+    """
+    start_time = time.time()
+
     os.system(f"../poisson-cuda -n {nodes} -i {iterations} -t {threads} > /dev/null")
 
     return time.time() - start_time
@@ -76,6 +98,7 @@ def main() -> None:
     print(f"Starting profiling with up to {max_nodes} nodes, {iterations} iterations, and {threads} threads")
 
     times = []
+    cuda_times = []
     try:
         selected_cubes = cube_sizes[:cube_sizes.index(max_nodes)+1]
     except:
@@ -83,7 +106,9 @@ def main() -> None:
         
     for nodes in selected_cubes:
         times.append(execute_poisson(nodes, iterations, threads))
-        print(f"Node {nodes} executed, time: {times[-1]}")
+        print(f"Node {nodes} executed on CPU, time: {times[-1]}")
+        cuda_times.append(execute_poisson_cuda(nodes, iterations, threads))
+        print(f"Node {nodes} executed on GPU, time: {cuda_times[-1]}")
 
     with open(f"{filename}_mn{max_nodes}_i{iterations}_t{threads}.csv", "w") as f:
         f.write("Cube Size, Time (s)\n")
@@ -91,10 +116,12 @@ def main() -> None:
         for i in range(0, len(selected_cubes)):
             f.write(f"{selected_cubes[i]}, {times[i]}\n")
 
-    plt.plot(selected_cubes, np.array(times))
+    plt.plot(selected_cubes, np.array(times), label='CPU')
+    plt.plot(selected_cubes, np.array(cuda_times), label='GPU')
     plt.title(f"{filename} time poisson n: {max_nodes}, i: {iterations}, t: {threads}")
     plt.xlabel(f"Cube Size")
     plt.ylabel(f"seconds")
+    plt.legend()
     # if (max_threads < 5):
     plt.xticks(selected_cubes)
 

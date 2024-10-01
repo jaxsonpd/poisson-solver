@@ -87,7 +87,7 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
     }
 
     // Apply constant boundary
-    apply_const_boundary(N, next);
+    apply_const_boundary(N, curr);
 
     pthread_barrier_init(&barrier, NULL, threads);
 

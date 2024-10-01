@@ -8,7 +8,6 @@
 #include <math.h>
 
 #include "utils.h"
-// #include "poisson_iter.h"
 
 #include "cuda_worker.cuh"
 
@@ -16,6 +15,8 @@
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 
+#define PRECISION double
+#define BLOCK_SIZE 4
 
 /**
  * poisson.c
@@ -96,7 +97,6 @@ double* poisson_mixed(int N, double* source, int iterations, float delta) {
 
     // Apply constant boundary
     apply_const_boundary(N, next);
-    // apply_const_boundary(N, curr);
 
     // Allocate device memory
     double *d_source, *d_curr, *d_next;
@@ -108,7 +108,7 @@ double* poisson_mixed(int N, double* source, int iterations, float delta) {
     cudaMemcpy(d_source, source, N * N * N * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_curr, next, N * N * N * sizeof(double), cudaMemcpyHostToDevice);
 
-    dim3 threadsPerBlock(8, 8, 8);  // You can adjust the block size as needed
+    dim3 threadsPerBlock(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
     dim3 numBlocks((N + threadsPerBlock.x - 1) / threadsPerBlock.x, 
                   (N + threadsPerBlock.y - 1) / threadsPerBlock.y, 
                   (N + threadsPerBlock.z - 1) / threadsPerBlock.z);
@@ -116,10 +116,13 @@ double* poisson_mixed(int N, double* source, int iterations, float delta) {
     // Main iteration loop
     for (int iter = 0; iter < iterations; iter++) {
         // Launch the boundary condition kernel
-        apply_von_neuman_boundary_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
+        // apply_von_neuman_boundary_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
+        // cudaDeviceSynchronize();
 
-        // Launch the inner iteration kernel
-        poisson_iteration_inner_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
+        // // Launch the inner iteration kernel
+        // poisson_iteration_inner_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
+        // cudaDeviceSynchronize();
+        poisson_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
 
         // Swap pointers
         double* temp = d_curr;
