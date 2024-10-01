@@ -1,6 +1,6 @@
 #set document(
-  title: [Computer Architecture],
-  author: "JD IC DH",
+  title: [ENCE464 T2 Poisson Assignment Group 13],
+  author: "Jack Duignan",
   date: auto
 )
 
@@ -41,13 +41,18 @@
   ENCE464 Assignment 2: Computer Architecture
 ])
 
-#align(center, text(18pt)[
-  Jack Duignan, Isaac Cone, Daniel Hawes Group 13
+#align(center, text(14pt)[
+  Group 13: Jack Duignan, Isaac Cone, Daniel Hawes
 ])
 
 = Architecture Overview
-The CPU
-#figure(image("./fig/cpu_topology.png", width: 60%), caption: "Central Processing Unit (CPU) architecture for the x86 AMD Ryzen 9 6900HX.")
+The Central Processing Unit (CPU) described in this section is the AMD Ryzen 9 6900HX. Released in 2022, this CPU 8 identical cores with 2 threads per core for a total of 16 logical cores. This architecture is shown in @fig1 and will be described in further depth. 
+#figure(image("./fig/cpu_topology.png", width: 60%), caption: "Central Processing Unit (CPU) architecture for the x86 AMD Ryzen 9 6900HX.")<fig1>
+
+== Cores
+
+== Memory Caching
+
 = Multithreading
 
 = Cache
