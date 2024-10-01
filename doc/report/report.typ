@@ -45,6 +45,15 @@
   Group 13: Jack Duignan, Isaac Cone, Daniel Hawes
 ])
 
+The result of running the completed program over a range of cube sizes for 300 iterations using 20 threads can be found in #ref(<fig:complete-cube-run>).
+
+#figure(
+  image("figures/profile1-10-mn901-i300-t-20.png", width: 60%),
+  caption: [
+    A complete run of the firmware across all cube sizes with 300 iterations and 20 threads.
+  ],
+) <fig:complete-cube-run>
+
 = Architecture Overview
 The Central Processing Unit (CPU) described in this section is the AMD Ryzen 9 6900HX. Released in 2022, this CPU 8 identical cores with 2 threads per core for a total of 16 logical cores. This architecture is shown in @fig1 and will be described in further depth. 
 #figure(image("./fig/cpu_topology.png", width: 60%), caption: "Central Processing Unit (CPU) architecture for the x86 AMD Ryzen 9 6900HX.")<fig1>
@@ -116,15 +125,6 @@ The results found in #ref(<tab:non-optimised-profile>) and #ref(<tab:optimised-p
 
 One interesting finding of the profiling was how little time is spent at the synchronisation barriers in the code. The team was originally concered that these will cause large delays in the program as different threads took longer to excute. By using profiling this was found to not be the case and thus didn't need to be optimised. 
 
-The result of running the completed program over a range of cube sizes for 300 iterations using 20 threads can be found in #ref(<fig:complete-cube-run>).
-
-#figure(
-  image("figures/profile1-10-mn901-i300-t-20.png", width: 60%),
-  caption: [
-    A complete run of the firmware across all cube sizes with 300 iterations and 20 threads.
-  ],
-) <fig:complete-cube-run>
-
 
 
 
@@ -138,6 +138,14 @@ The result of running the completed program over a range of cube sizes for 300 i
 
 #pagebreak()
 = Individual Topic 1 Jack Duignan - Branch Prediction
+
+- WHat is branch Prediction
+
+- Branch prediction errors
+
+- Changing of program
+
+- Results of changing
 
 #pagebreak()
 = Individual Topic 2 Isaac Cone - GPU
