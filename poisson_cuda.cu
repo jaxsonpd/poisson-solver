@@ -18,6 +18,8 @@
 #define PRECISION double
 #define BLOCK_SIZE 4
 
+uint64_t vram_capacity;
+
 /**
  * poisson.c
  * Implementation of a Poisson solver with Dirichlet boundary conditions.
@@ -98,15 +100,39 @@ double* poisson_mixed(int N, double* source, int iterations, float delta) {
     // Apply constant boundary
     apply_const_boundary(N, next);
 
+    uint64_t used_memory = N * N * N * sizeof(double) * 3;
+    if (debug) {
+        printf("Predicting memory use of %lu\n", used_memory);
+    }
+
+    uint64_t batches = (uint16_t)ceil((float)used_memory / (float)vram_capacity);
+    if (debug) {
+        printf("Identified need for %lu batches per iteration\n", batches);
+    }
+
     // Allocate device memory
+    uint64_t batch_size = N * N * N * sizeof(double) / batches; 
     double *d_source, *d_curr, *d_next;
-    cudaMalloc((void**)&d_source, N * N * N * sizeof(double));
-    cudaMalloc((void**)&d_curr, N * N * N * sizeof(double));
-    cudaMalloc((void**)&d_next, N * N * N * sizeof(double));
+    cudaError_t ex;
+    
+    ex = cudaMalloc((void**)&d_source, batch_size);
+    if (ex != 0) {
+        fprintf(stderr, "Error: ran out of memory when trying to allocate %i sized cube on GPU, error code %i\n", N, ex);
+        exit(EXIT_FAILURE);
+    }
+    ex = cudaMalloc((void**)&d_curr, batch_size);
+    if (ex != 0) {
+        fprintf(stderr, "Error: ran out of memory when trying to allocate %i sized cube on GPU, error code %i\n", N, ex);
+        exit(EXIT_FAILURE);
+    }
+    ex = cudaMalloc((void**)&d_next, batch_size);
+    if (ex != 0) {
+        fprintf(stderr, "Error: ran out of memory when trying to allocate %i sized cube on GPU, error code %i\n", N, ex);
+        exit(EXIT_FAILURE);
+    }
 
     // Copy data to device
-    cudaMemcpy(d_source, source, N * N * N * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_curr, next, N * N * N * sizeof(double), cudaMemcpyHostToDevice);
+    
 
     dim3 threadsPerBlock(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
     dim3 numBlocks((N + threadsPerBlock.x - 1) / threadsPerBlock.x, 
@@ -115,13 +141,12 @@ double* poisson_mixed(int N, double* source, int iterations, float delta) {
 
     // Main iteration loop
     for (int iter = 0; iter < iterations; iter++) {
-        // Launch the boundary condition kernel
-        // apply_von_neuman_boundary_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
-        // cudaDeviceSynchronize();
-
-        // // Launch the inner iteration kernel
-        // poisson_iteration_inner_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
-        // cudaDeviceSynchronize();
+        for (int batch_num = 0; batch_num < batches; batch_num++)
+        {
+            /// SOMETHING NEEDED HERE...
+            // cudaMemcpy(d_source, &(source[batch_num * batch_size]), batch_size, cudaMemcpyHostToDevice);
+            // cudaMemcpy(d_curr, next, N * N * N * sizeof(double), cudaMemcpyHostToDevice);
+        }
         poisson_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
 
         // Swap pointers
@@ -158,6 +183,15 @@ int main(int argc, char** argv) {
     double amplitude = 1.0;
 
     int opt;
+
+    system("nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits");
+
+    char buff[16];
+    FILE *f = fopen("vram.txt", "r");
+    fgets(buff, 16, f);
+    vram_capacity = atoi(buff); 
+    vram_capacity = vram_capacity * 1024 * 1024 * 4 / 5; // Convert from MB to B
+    printf("vram_capacity: %lu\n", vram_capacity);
 
     // parse the command line arguments
     while ((opt = getopt(argc, argv, "h:n:i:x:y:z:a:t:d:")) != -1) {
@@ -234,6 +268,6 @@ int main(int argc, char** argv) {
 
     free(source);
     free(result);
-
+    
     return EXIT_SUCCESS;
 }
