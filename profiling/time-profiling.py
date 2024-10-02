@@ -103,7 +103,6 @@ def main() -> None:
             f.write(f"{selected_cubes[i]}, {times[i]}\n")
 
     plt.plot(selected_cubes, np.array(times), label='CPU')
-    plt.plot(selected_cubes, np.array(cuda_times), label='GPU')
     plt.title(f"{filename} time poisson n: {max_nodes}, i: {iterations}, t: {threads}")
     plt.xlabel(f"Cube Size")
     plt.ylabel(f"seconds")
