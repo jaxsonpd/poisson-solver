@@ -6,8 +6,9 @@ all: poisson
 CFLAGS = -g -Wall -lpthread -D_XOPEN_SOURCE=600
 LDLIBS = -lm
 CC = gcc 
+SOURCE = poisson.c worker_thread.c utils.c poisson_iter.c worker_thread_comms.c flags.h
 
-poisson: poisson.c worker_thread.c utils.c poisson_iter.c
+poisson: $(SOURCE)
 
 .PHONY: disassembly
 disassembly: poisson.s
@@ -15,16 +16,13 @@ disassembly: poisson.s
 poisson.s: poisson
 	objdump -S --disassemble $< > $@
 
-.PHONY: profile
-profile: poisson.c worker_thread.c utils.c poisson_iter.c
-	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -o poisson-profile
+poisson-profile: $(SOURCE)
+	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -o $@
 
+poisson-profile-o: $(SOURCE)
+	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -O3 -o $@
 poisson-cuda: poisson_cuda.cu cuda_worker.cu
 	nvcc $^ -o $@  
-	
-.PHONY: profile-o
-profile-o: poisson.c worker_thread.c utils.c poisson_iter.c
-	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -O3 -o poisson-profile-opt
 
 .PHONY: test
 test: poisson

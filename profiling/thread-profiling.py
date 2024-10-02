@@ -9,6 +9,7 @@ import os
 import time
 import matplotlib.pyplot as plt
 import numpy as np
+import datetime
 
 def setup_cmd_args() ->argparse.ArgumentParser:
     """
@@ -38,10 +39,14 @@ def setup_cmd_args() ->argparse.ArgumentParser:
                         default="profile",
                         help="name to append at the beginning of test files")
     
+    parser.add_argument("-o", "--object_name", nargs="?", action="store",
+                        default="poisson",
+                        help="object file to run")
+    
     return parser
 
 
-def execute_poisson(nodes: int, iterations: int, threads: int) -> float:
+def execute_poisson(nodes: int, iterations: int, threads: int, object_name: str) -> float:
     """
     Execute one poisson calculation
 
@@ -52,6 +57,8 @@ def execute_poisson(nodes: int, iterations: int, threads: int) -> float:
         Number of iterations to complete
     threads
         Number of threads to use
+    object_name
+        The object file to run
 
     ### Returns:
     float
@@ -59,7 +66,7 @@ def execute_poisson(nodes: int, iterations: int, threads: int) -> float:
     """
     start_time = time.time()
 
-    os.system(f"./poisson -n {nodes} -i {iterations} -t {threads} > /dev/null")
+    os.system(f"../{object_name} -n {nodes} -i {iterations} -t {threads} > /dev/null")
 
     return time.time() - start_time
 
@@ -72,16 +79,18 @@ def main() -> None:
     nodes = int(args.nodes)
     iterations = int(args.iterations)
     filename = str(args.filename)
+    object_name = str(args.object_name)
 
     print(f"Starting profiling with {nodes} nodes, {iterations} iterations, and up to {max_threads} threads")
 
     times = []
     for thread in range(1, max_threads):
-        times.append(execute_poisson(nodes, iterations, thread))
+        times.append(execute_poisson(nodes, iterations, thread, object_name))
         if (thread % (max_threads/10) == 0):
             print(f"Thread {thread} Executed")
 
     with open(f"{filename}_n{nodes}_i{iterations}_mt{max_threads}.csv", "w") as f:
+        f.write(f"Thread Profile - {datetime.datetime.now()}\n")
         f.write("Number Threads, Time (s)\n")
 
         for i in range(1, max_threads):

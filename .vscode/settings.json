@@ -1,7 +1,4 @@
 {
-    "files.eol": "\n",
-    "files.associations": {
-        "poisson_iter.h": "c",
-        "random": "cpp"
-    }
+  "files.eol": "\n",
+  "C_Cpp_Runner.msvcBatchPath": ""
 }
