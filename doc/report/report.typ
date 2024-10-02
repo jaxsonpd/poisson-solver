@@ -62,6 +62,16 @@ row selection
 memcopy
 barrier
 
+The program was split from working a single core to multiple cores using Multithreading. 
+
+Each thread adds their calculation to the section of memory dedicated for the next calculation. 
+
+Because there are multiple threads, there is a risk of race conditions. The program wait_to_copy() is separate for profiling purposes. 
+This function uses pthread_barrier_wait() 
+
+To ensure that the next iteration is not started by one thread while another thread is still calculating from the current array, pthread_barrier_wait() is used.
+This waits for the number of threads to all finish copying their calcuations to the next array. 
+
 = Cache - hard
 
 = Profiling - easy - Jack
