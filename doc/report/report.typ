@@ -54,26 +54,37 @@ The result of running the completed program over a range of cube sizes for 300 i
   ],
 ) <fig:complete-cube-run>
 
-= Architecture Overview
-The Central Processing Unit (CPU) described in this section is the AMD Ryzen 9 6900HX. Released in 2022, this CPU 8 identical cores with 2 threads per core for a total of 16 logical cores. The CPU uses the x86-64 instruction set architecture. The CPU structure is shown in @cpu_topo.
+= Processor Architecture
+== Overview
+The Central Processing Unit (CPU) described in this section is the AMD Ryzen 9 6900HX. This is a high-performance mobile CPU which uses a 6nm process node. Released in 2022, this CPU has eight identical cores with two threads per core for a total of 16 processing units. The CPU uses the x86-64 instruction set architecture. The CPU structure is shown in @cpu_topo. This section will analyse each of the sub-components of the CPU in more detail, including the cores, memory accessing, cache organisation, and instruction set architecture. The archiecture of an AMD64 core is shown in @cpu_core @amd64_programmers_manual.
 
 #figure(image("./figures/cpu_topology.png", width: 60%), caption: "Central Processing Unit (CPU) architecture for the x86-64 AMD Ryzen 9 6900HX.")<cpu_topo>
 
+#figure(image("./figures/cpu_core.png", width: 50%), caption: "Typical AMD64 core architecture.")<cpu_core>
+
 == Cores
+As mentioned, each of the eight cores are identical. The AMD64 cores in this CPU follow the structure shown in @cpu_core. Each core has a number of Functional Units (FUs) for different purposes. These include Floating Point Units (FPUs), Arithmetic Logic Units (ALUs), and Control Units (CUs), memory units, and I/O units. Each of these units handle a different functionality required by the core, allowing for less than one instruction per cycle due to pipelining. The performance of the core is limited by the number of FUs, meaning the two threads on a single core do not always achieve the performance of one core per thread. Despite this, maximisng FU utilisation can drastically improve performance.
 
 == Memory
+The computer has 15GB of available DRAM. Inside the CPU, there are multiple levels of memory caching which implement a modified-harvard architecture. The CPU has a shared 16MB L3 cache across all eight cores. Each core then has its own 512 kB L2 Cache and 32kB L1 data and instruction caches. This caching allows both data and instructions to be read in parallel from the shared address space, improving efficiency. Caching is important as shown in @tab:cache-data, where the instructions to access data in the different memory levels grows rapidly.
+
+#figure(
+  caption: [Cache performance of the AMD Ryzen 6900HX.],
+  table(
+  columns: (15%, 25%, 25%),
+  align: (left, center, center),
+  table.header([Memory], [Read Instructions], [Access Count]),
+  table.hline(stroke: 1pt),
+  [L1 Cache], [X], [X],
+  [L2 Cache], [X], [X],
+  [L3 Cache], [X], [X],
+  [System], [X], [X],
+  table.hline(stroke: 1pt),
+)) <tab:cache-data>
+
 
 == Instruction Set
-
-big picture
-
-ALU
-
-FPL
-
-Cache
-
-Intruction decodeing etc.
+AMD64 CPUs use the x86-64 instruction set architecture. This is an extension of the ubiquitous x86 architecture that introduces 64 bit computing while retaining backwards compatibility. The use of a 64 bit architecture allows for much higher addresses of RAM to be read, theoretically up to four exabytes. The x86-64 architecture also has 64 bit general-purpose registers and support for more complicated instructions that are able to efficiently execute complex operations. Some of these include the use Single Instruction Multiple Data (SIMD) instructions to operate on vectors of data at once.
 
 #pagebreak()
 = Multithreading - easy - Daniel
@@ -166,6 +177,19 @@ The a comparison of the old program with conditional control hazards and without
 
 #pagebreak()
 = Individual Topic 2 Isaac Cone - GPU
+GPU much faster
+
+Uses parallel
+
+Different archiecture
+
+implemented Nvidia 3070ti using cuda toolkit
+
+brief explainer of how this was done - create kernel function and specify blocks, copy to GPU
+
+VRAM limitation, how could be fixed
+
+results
 
 #pagebreak()
 = Individual Topic 3 Daniel Hawes - SIMD
