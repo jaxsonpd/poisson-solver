@@ -144,11 +144,26 @@ In earlier iterations of the program the Von Neumann boundary was called at ever
 
 - WHat is branch Prediction
 
+Excution on a CPU is optimised using piplineing which allows single clock cycle, single instruction excution. It does this by loading the next set of instructions while the previous instructions are being excuted. When branch instructions occur a control hazard developes as the CPU is unsure which set of instructions to load. This can cause costly pipeline flushes if the CPU predicts wrong. To attempt to mitigate the number of times this pipeline flush occurs the CPU predicts which way excution will go before the conditional branch is excuted. This is branch prediction and is implemented in various ways across CPU architectures.
+
 - Branch prediction errors
+
+In the poission iteration software there are several control hazards caused by conditional branching. One of the most significant of these is during the inner iteration of the poission equation. In this operation the code has use several conditional instructions to check the location of the current node and apply the correct iteration. This results in our implemention of the iteration to have 12 conditional jump instructions per node update (if complied without optimisations). To improve the speed of our implementation it was decided to reduce the number of these jumps where possible to reduce the amount of branch prediction required by the CPU.
 
 - Changing of program
 
+The reason our implementation required so many conditional instrcutions is that we use the same nested `for` loop to iterate over both the Von Nueman boundary (the dircilc boundary can be applied once during initilisation) and the inner nodes of the cube. It was hypothosised that moving these out of the same loop and reducing the Von Nueman iteration to only over the outer nodes would reduce the number of condition branch control hazards per iteration and thus overall. This was achived by splitting each iteration into to components first the Von Nueman boundary is applied to only the nodes required then the nested loop only updated the inner nodes. This change completely removed the conditional instructions in the main iteration loop (which is called most often) removing the largest control hazrd from the program. 
+
 - Results of changing
+
+The a comparison of the old program with conditional control hazards and without can be seen in #ref(<fig:conditional-branch-cmp>). This figure shows that the programs excution has been reduced by $30%$. With the real benefits occur at the large cube sizes as the more iterations mean more conditional branch issues. This result is expected as by reducing the number of conditional branches the CPU can optimise use of pipelining as the number of possible pipeline flushes is reduced. This change also has the added benefit of reducing the number of instructions per iteration. This is due to the Von Nueman boundary application only iterating over nodes that will need to be applied to as apposed to all nodes in the cube.
+
+#figure(
+  image("figures/profile1-10-mn901-i300-t-20.png", width: 60%),
+  caption: [
+    A comparison of the poission solver software excution times with and without conditional branch reduce to reduce control hazards.
+  ],
+) <fig:conditional-branch-cmp>
 
 #pagebreak()
 = Individual Topic 2 Isaac Cone - GPU
