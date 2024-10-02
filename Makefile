@@ -21,6 +21,7 @@ poisson-profile: $(SOURCE)
 
 poisson-profile-o: $(SOURCE)
 	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -O3 -o $@
+	
 poisson-cuda: poisson_cuda.cu cuda_worker.cu
 	nvcc $^ -o $@  
 
