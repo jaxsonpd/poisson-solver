@@ -41,9 +41,14 @@ def setup_cmd_args() ->argparse.ArgumentParser:
                         default="profile",
                         help="name to append at the beginning of test files")
     
+    parser.add_argument("-o", "--object_name", nargs="?", action="store",
+                        default="poisson",
+                        help="object file to run")
+    
     return parser
 
-def execute_poisson(nodes: int, iterations: int, threads: int) -> float:
+
+def execute_poisson(nodes: int, iterations: int, threads: int, object_name: str) -> float:
     """
     Execute one poisson calculation
 
@@ -54,6 +59,8 @@ def execute_poisson(nodes: int, iterations: int, threads: int) -> float:
         Number of iterations to complete
     threads
         Number of threads to use
+    object_name
+        The object file to run
 
     ### Returns:
     float
@@ -61,7 +68,7 @@ def execute_poisson(nodes: int, iterations: int, threads: int) -> float:
     """
     start_time = time.time()
 
-    os.system(f"../poisson -n {nodes} -i {iterations} -t {threads} > /dev/null")
+    os.system(f"../{object_name} -n {nodes} -i {iterations} -t {threads} > /dev/null")
 
     return time.time() - start_time
 
@@ -73,6 +80,7 @@ def main() -> None:
     max_nodes = int(args.nodes)
     iterations = int(args.iterations)
     filename = str(args.filename)
+    object_name = str(args.object_name)
 
     print(f"Starting profiling with up to {max_nodes} nodes, {iterations} iterations, and {threads} threads")
 
@@ -83,7 +91,7 @@ def main() -> None:
         selected_cubes = cube_sizes
         
     for nodes in selected_cubes:
-        times.append(execute_poisson(nodes, iterations, threads))
+        times.append(execute_poisson(nodes, iterations, threads, object_name))
         print(f"Node {nodes} executed, time: {times[-1]}")
 
     with open(f"{filename}_mn{max_nodes}_i{iterations}_t{threads}.csv", "w") as f:
