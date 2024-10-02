@@ -55,9 +55,9 @@ The result of running the completed program over a range of cube sizes for 300 i
 ) <fig:complete-cube-run>
 
 = Architecture Overview
-The Central Processing Unit (CPU) described in this section is the AMD Ryzen 9 6900HX. Released in 2022, this CPU 8 identical cores with 2 threads per core for a total of 16 logical cores. The CPU uses the x86-64 instruction set architecture. The CPU structure is shown in @fig1.
+The Central Processing Unit (CPU) described in this section is the AMD Ryzen 9 6900HX. Released in 2022, this CPU 8 identical cores with 2 threads per core for a total of 16 logical cores. The CPU uses the x86-64 instruction set architecture. The CPU structure is shown in @cpu_topo.
 
-#figure(image("./fig/cpu_topology.png", width: 60%), caption: "Central Processing Unit (CPU) architecture for the x86-64 AMD Ryzen 9 6900HX.")<fig1>
+#figure(image("./fig/cpu_topology.png", width: 60%), caption: "Central Processing Unit (CPU) architecture for the x86-64 AMD Ryzen 9 6900HX.")<cpu_topo>
 
 == Cores
 
