@@ -85,6 +85,7 @@ def main() -> None:
     print(f"Starting profiling with up to {max_nodes} nodes, {iterations} iterations, and {threads} threads")
 
     times = []
+    cuda_times = []
     try:
         selected_cubes = cube_sizes[:cube_sizes.index(max_nodes)+1]
     except:
@@ -101,10 +102,11 @@ def main() -> None:
         for i in range(0, len(selected_cubes)):
             f.write(f"{selected_cubes[i]}, {times[i]}\n")
 
-    plt.plot(selected_cubes, np.array(times))
+    plt.plot(selected_cubes, np.array(times), label='CPU')
     plt.title(f"{filename} time poisson n: {max_nodes}, i: {iterations}, t: {threads}")
     plt.xlabel(f"Cube Size")
     plt.ylabel(f"seconds")
+    plt.legend()
     # if (max_threads < 5):
     plt.xticks(selected_cubes)
     plt.grid(True)

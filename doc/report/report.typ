@@ -57,7 +57,7 @@ The result of running the completed program over a range of cube sizes for 300 i
 = Architecture Overview
 The Central Processing Unit (CPU) described in this section is the AMD Ryzen 9 6900HX. Released in 2022, this CPU 8 identical cores with 2 threads per core for a total of 16 logical cores. The CPU uses the x86-64 instruction set architecture. The CPU structure is shown in @cpu_topo.
 
-#figure(image("./fig/cpu_topology.png", width: 60%), caption: "Central Processing Unit (CPU) architecture for the x86-64 AMD Ryzen 9 6900HX.")<cpu_topo>
+#figure(image("./figures/cpu_topology.png", width: 60%), caption: "Central Processing Unit (CPU) architecture for the x86-64 AMD Ryzen 9 6900HX.")<cpu_topo>
 
 == Cores
 
@@ -139,6 +139,13 @@ In earlier iterations of the program the Von Neumann boundary was called at ever
 #pagebreak()
 = Compiler Optimisation - easy 
 
+#figure(
+  image("figures/JPC_optimisation_cmp.png", width: 60%),
+  caption: [
+    A comparison of the poisson solver software execution times with different compiler optimisations.
+  ],
+) <fig:optimisation-cmp>
+
 #pagebreak()
 = Individual Topic 1 Jack Duignan - Branch Prediction
 
@@ -148,12 +155,12 @@ In the poission iteration software there are several control hazards caused by c
 
 The reason our implementation required so many conditional instructions is that we use the same nested `for` loop to iterate over both the Von Neumann boundary (the dircilc boundary can be applied once during initialisation) and the inner nodes of the cube. It was hypothesised that moving these out of the same loop and reducing the Von Neumann iteration to only over the outer nodes would reduce the number of condition branch control hazards per iteration and thus overall. This was achieved by splitting each iteration into to components first the Von Neumann boundary is applied to only the nodes required then the nested loop only updated the inner nodes. This change completely removed the conditional instructions in the main iteration loop (which is called most often) removing the largest control hazard from the program. 
 
-The a comparison of the old program with conditional control hazards and without can be seen in #ref(<fig:conditional-branch-cmp>). This figure shows that the programs execution has been reduced by $30%$. With the real benefits occur at the large cube sizes as the more iterations mean more conditional branch issues. This result is expected as by reducing the number of conditional branches the CPU can optimise use of pipelining as the number of possible pipeline flushes is reduced. This change also has the added benefit of reducing the number of instructions per iteration. This is due to the Von Neumann boundary application only iterating over nodes that will need to be applied to as opposed to all nodes in the cube.
+The a comparison of the old program with conditional control hazards and without can be seen in #ref(<fig:conditional-branch-cmp>). This figure shows that the programs execution has been reduced by $10%$. With the real benefits occur at the large cube sizes as the more iterations mean more conditional branch issues. This result is expected as by reducing the number of conditional branches the CPU can optimise use of pipelining as the number of possible pipeline flushes is reduced. This change also has the added benefit of reducing the number of instructions per iteration. This is due to the Von Neumann boundary application only iterating over nodes that will need to be applied to as opposed to all nodes in the cube.
 
 #figure(
-  image("figures/profile1-10-mn901-i300-t-20.png", width: 60%),
+  image("figures/JPC_branch_predict_cmp.png", width: 60%),
   caption: [
-    A comparison of the poission solver software execution times with and without conditional branch reduce to reduce control hazards.
+    A comparison of the poisson solver software execution times with and without conditional branch reduction to reduce control hazards.
   ],
 ) <fig:conditional-branch-cmp>
 
