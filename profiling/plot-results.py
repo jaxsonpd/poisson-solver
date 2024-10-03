@@ -27,7 +27,12 @@ def plot_results(filenames: List[str], labels: List[str], plot_type: str = "time
     for file, label in zip(filenames, labels):
         data = np.loadtxt(file, delimiter=",", skiprows=2)
         # You can customize plotting based on the type if needed
-        plt.plot(data[:, 0], data[:, 1], label=label)
+        if (filenames.index(file) == 2):
+            plt.plot(data[:, 0], data[:, 1], label=label, linestyle="--")
+        else:
+            plt.plot(data[:, 0], data[:, 1], label=label)
+
+        
 
     plt.grid(True)
     if (plot_type == "thread"):
@@ -44,11 +49,11 @@ def plot_results(filenames: List[str], labels: List[str], plot_type: str = "time
 
 
 if __name__ == "__main__":
-    figure = plot_results(["./JPC_not_split_exe00_mn901_i300_t20.csv", 
-                           "./JPC_not_split_exe03_mn901_i300_t20.csv", 
-                           "./JPC_split_exe00_mn901_i300_t20.csv",
-                           "./JPC_split_exe03_mn901_i300_t20.csv"],
-                           ["Single Iter -O0", "Single Iter -03", "Split Iter -O0", "Split Iter -03"])
+    figure = plot_results(["./JPC_JKI00_mn601_i300_t20.csv", 
+                           "./JPC_KIJ00_mn901_i300_t20.csv", 
+                           "./JPC_KJI00_mn901_i300_t20.csv",
+                           "./JPC_IKJ00_mn601_i300_t20.csv"],
+                           ["j, k, i", "k, i, j", "k, j, i", "i, k, j"])
 
-    figure.savefig("JPC_branch_predict_cmp.png")
+    figure.savefig("JPC_caching_cmp.png")
     plt.show()
