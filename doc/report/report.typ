@@ -89,6 +89,13 @@ barrier
   table.hline(stroke: 1pt),
 )) <tab:cache-data>
 
+#figure(
+  image("figures/JPC_caching_cmp.png", width: 60%),
+  caption: [
+    A comparison of the poisson solver software execution times with different iteration schemes showing the effect of cache utilisation.
+  ],
+) <fig:caching-cmp>
+
 #pagebreak()
 = Profiling - easy - Jack
 
