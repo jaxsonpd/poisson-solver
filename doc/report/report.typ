@@ -45,7 +45,7 @@
   Group 13: Jack Duignan, Isaac Cone, Daniel Hawes
 ])
 
-The result of running the completed program over a range of cube sizes for 300 iterations using 20 threads can be found in #ref(<fig:complete-cube-run>).
+The result across many cube sizes with 300 iterations and 20 threads is shown by #ref(<fig:complete-cube-run>).
 
 #figure(
   image("figures/profile1-10-mn901-i300-t-20.png", width: 60%),
@@ -53,37 +53,17 @@ The result of running the completed program over a range of cube sizes for 300 i
     A complete run of the firmware across all cube sizes with 300 iterations and 20 threads.
   ],
 ) <fig:complete-cube-run>
-
+#pagebreak()
 = Processor Architecture
-== Overview
-The Central Processing Unit (CPU) described in this section is the AMD Ryzen 9 6900HX. This is a high-performance mobile CPU which uses a 6nm process node. Released in 2022, this CPU has eight identical cores with two threads per core for a total of 16 processing units. The CPU uses the x86-64 instruction set architecture. The CPU structure is shown in @cpu_topo. This section will analyse each of the sub-components of the CPU in more detail, including the cores, memory accessing, cache organisation, and instruction set architecture. The archiecture of an AMD64 core is shown in @cpu_core @amd64_programmers_manual.
+The Central Processing Unit (CPU) described in this section is the AMD Ryzen 9 6900HX. This is a high-performance mobile CPU based on a 6nm process node. Its eight identical cores have two threads each for a total of 16 processing units, and uses the AMD64 (x86-64) instruction set architecture. The overall CPU structure is shown in @fig:cpu_topo.
 
-#figure(image("./figures/cpu_topology.png", width: 60%), caption: "Central Processing Unit (CPU) architecture for the x86-64 AMD Ryzen 9 6900HX.")<cpu_topo>
+#figure(image("./figures/cpu_topology.png", width: 50%), caption: "Central Processing Unit (CPU) architecture for the x86-64 AMD Ryzen 9 6900HX.")<fig:cpu_topo>
 
-#figure(image("./figures/cpu_core.png", width: 50%), caption: "Typical AMD64 core architecture.")<cpu_core>
+As mentioned, the cores use the AMD64 archiecture, which is shown in @fig:cpu_core @amd64_programmers_manual. Each core has several Functional Units (FUs). These include execution units such as Floating Point Units (FPUs) and Arithmetic Logic Units (ALUs), and memory and I/O units for interfacing with the system. By having units specialsed for various tasks, the core is able to achieve less than one cycle per instruction by using pipelining. The performance of the core is limited by the number of FUs, and since these are shared between threads, two threads are not guaranteed to achieve the performance of one core per thread. Despite this, maximisng FU utilisation can drastically improve performance.
+#figure(image("./figures/core_diagram.png", width: 80%), caption: "Typical AMD64 core architecture.")<fig:cpu_core>
 
-== Cores
-As mentioned, each of the eight cores are identical. The AMD64 cores in this CPU follow the structure shown in @cpu_core. Each core has a number of Functional Units (FUs) for different purposes. These include Floating Point Units (FPUs), Arithmetic Logic Units (ALUs), and Control Units (CUs), memory units, and I/O units. Each of these units handle a different functionality required by the core, allowing for less than one instruction per cycle due to pipelining. The performance of the core is limited by the number of FUs, meaning the two threads on a single core do not always achieve the performance of one core per thread. Despite this, maximisng FU utilisation can drastically improve performance.
-
-== Memory
 The computer has 15GB of available DRAM. Inside the CPU, there are multiple levels of memory caching which implement a modified-harvard architecture. The CPU has a shared 16MB L3 cache across all eight cores. Each core then has its own 512 kB L2 Cache and 32kB L1 data and instruction caches. This caching allows both data and instructions to be read in parallel from the shared address space, improving efficiency. Caching is important as shown in @tab:cache-data, where the instructions to access data in the different memory levels grows rapidly.
 
-#figure(
-  caption: [Cache performance of the AMD Ryzen 6900HX.],
-  table(
-  columns: (15%, 25%, 25%),
-  align: (left, center, center),
-  table.header([Memory], [Read Instructions], [Access Count]),
-  table.hline(stroke: 1pt),
-  [L1 Cache], [X], [X],
-  [L2 Cache], [X], [X],
-  [L3 Cache], [X], [X],
-  [System], [X], [X],
-  table.hline(stroke: 1pt),
-)) <tab:cache-data>
-
-
-== Instruction Set
 AMD64 CPUs use the x86-64 instruction set architecture. This is an extension of the ubiquitous x86 architecture that introduces 64 bit computing while retaining backwards compatibility. The use of a 64 bit architecture allows for much higher addresses of RAM to be read, theoretically up to four exabytes. The x86-64 architecture also has 64 bit general-purpose registers and support for more complicated instructions that are able to efficiently execute complex operations. Some of these include the use Single Instruction Multiple Data (SIMD) instructions to operate on vectors of data at once.
 
 #pagebreak()
@@ -95,6 +75,19 @@ barrier
 
 #pagebreak()
 = Cache - hard
+#figure(
+  caption: [Memory access cost at various cache levels for the AMD Ryzen 6900HX.],
+  table(
+  columns: (15%, 25%, 25%),
+  align: (left, center, center),
+  table.header([Memory], [Read Instructions], [Access Count]),
+  table.hline(stroke: 1pt),
+  [L1 Cache], [X], [X],
+  [L2 Cache], [X], [X],
+  [L3 Cache], [X], [X],
+  [System], [X], [X],
+  table.hline(stroke: 1pt),
+)) <tab:cache-data>
 
 #pagebreak()
 = Profiling - easy - Jack
@@ -177,6 +170,10 @@ The a comparison of the old program with conditional control hazards and without
 
 #pagebreak()
 = Individual Topic 2 Isaac Cone - GPU
+Graphics Processing Units (GPUs) are a specialised piece of hardware in a computer with many cores optimised for performing repeated operations in parallel. This is in contrast to CPUs, which are designed to be generic for many kinds of operation and are therefore not optimised in this way. GPUs are therefore significantly faster in some situations due to a much higher memory bandwidth and instruction throughput. The optimsed hardware found in GPUs is useful across a range of domains including artificial intelligence, modelling real-world phenomena such as weather, and blockchain technologies. This report will discuss how GPU hardware can be applied to enhance the performance of the poisson algorithm.
+
+The leading GPU manufacturer, NVIDIA, allows developers to interact with their hardware using the Compute Unified Device Architecture (CUDA) API @nvidia_cuda_guide. This allows the user to define a kernel function, a number of blocks, and the number of threads per block. Each thread then independently executes the same kernel function in parallel. The API handles allocation of sections of the target array to each thread and automatically synchronises threads 
+
 GPU much faster
 
 Uses parallel
