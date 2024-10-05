@@ -73,7 +73,12 @@ Multithreading can be used to separate a program from working on a single core t
 
 Each worker thread takes in the cube size, pointers to the current and next buffer of the cube, the slice dimensions and the number of iterations. This information is passed through the 'workerThread_t' structure. 
 
-Each thread works on a portion of the cube defined by it's i, j and k parameters given when the thread is created. Each thread works on its portion of the cube and either copies its calculation to memory of the 'next' buffer or swaps the pointers of the current and next buffer. To ensure there is synchronization between threads for this stage, a barrier is used. The barrier is initialised with 'pthread_barrier_t' This barrier is a counter that is incremented each time a thread reaches the barrier. When the counter reaches the number of threads, the barrier is lifted and the threads can continue.
+Each thread works on a portion of the cube defined by it's i, j and k parameters given when the thread is created. Each thread works on its portion of the cube and either copies its calculation to memory of the 'next' buffer. After the last thread completes it calculations for the iteration, the contents of the current buffer are copied to a temporary buffer, and the next buffer is copied to the current buffer.(DIAGRAM?) To ensure that race conditions don't occur during this process, a mutex is used to ensure that no threads are writing to the same memory location at the same time.
+
+
+To ensure there is synchronization between threads swapping buffers, a barrier is used at the end if each iteration. The barrier uses 'pthread_barrier_t'. This barrier is a counter that is incremented each time a thread reaches the end of it's calculations. When the counter reaches the number of threads, the barrier is removed and the threads can continue to the next iteration. When the last thread lifts the barrier, the threads can begin their calculations for the next iteration.
+
+
 
 row selection 
 memcopy
