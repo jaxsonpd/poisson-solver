@@ -8,12 +8,15 @@
 #include <math.h>
 
 #include "utils.h"
-#include "poisson_iter.h"
-#include "flags.h"
-#include "worker_thread_comms.h"
 
-#include "worker_thread.h"
+#include "cuda_worker.cuh"
 
+// CUDA runtime
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+
+#define PRECISION double
+#define BLOCK_SIZE 4
 
 /**
  * poisson.c
@@ -46,6 +49,23 @@
 
 extern char* optarg;
 
+// Global flag
+// Set to true when operating in debug mode to enable verbose logging
+static bool debug = false;
+
+// Statics
+const double top_boundary_cond = -1; // V The top dirlec boundary condition
+const double bottom_boundary_cond = 1; // V The bottom dirlec boundary condition
+
+void apply_const_boundary(int N, double* next) {
+    for (int j = 0; j < N; j++) {
+        for (int i = 0; i < N; i++) {
+            idx(next, N, 0, j, i) = top_boundary_cond;
+            idx(next, N, N - 1, j, i) = bottom_boundary_cond;
+        }
+    }
+}
+
 /**
  * @brief Solve Poissons equation for a given cube with Dirichlet boundary
  * conditions on all sides.
@@ -57,21 +77,16 @@ extern char* optarg;
  * @param delta         Grid spacing.
  * @return double*      Solution to Poissons equation.  Caller must free.
  */
-double* poisson_mixed(int N, double* source, int iterations, int threads, float delta) {
-#ifdef DEBUG
-    printf("Starting solver with:\n"
-        "n = %i\n"
-        "iterations = %i\n"
-        "threads = %i\n"
-        "delta = %f\n",
-        N, iterations, threads, delta);
-#endif // DEBUG
+double* poisson_mixed(int N, double* source, int iterations, float delta) {
+    if (debug) {
+        printf("Starting solver with:\n"
+            "n = %i\n"
+            "iterations = %i\n"
+            "delta = %f\n",
+            N, iterations, delta);
+    }
 
-    pthread_t worker_threads[threads];
-    workerThread_t thread_info[threads];
-    pthread_barrier_t barrier;
-
-    // Allocate some buffers to calculate the solution in
+    // Allocate memory for the solution on the host
     double* curr = (double*)calloc(N * N * N, sizeof(double));
     double* next = (double*)calloc(N * N * N, sizeof(double));
     // Ensure we haven't run out of memory
@@ -81,81 +96,59 @@ double* poisson_mixed(int N, double* source, int iterations, int threads, float 
     }
 
     // Apply constant boundary
-    apply_const_boundary(N, curr);
+    apply_const_boundary(N, next);
 
-    pthread_barrier_init(&barrier, NULL, threads);
-    worker_comms_init();
-    
+    // Allocate device memory
+    double *d_source, *d_curr, *d_next;
+    cudaMalloc((void**)&d_source, N * N * N * sizeof(double));
+    cudaMalloc((void**)&d_curr, N * N * N * sizeof(double));
+    cudaMalloc((void**)&d_next, N * N * N * sizeof(double));
 
-    int thickness = ceil((N-2)/(float)threads);
+    // Copy data to device
+    cudaMemcpy(d_source, source, N * N * N * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_curr, next, N * N * N * sizeof(double), cudaMemcpyHostToDevice);
 
-    // Launch each of the new worker threads
-    for (int i = 0; i < threads; i++) {
-        
-        // Fill in the arguments to the worker
-        thread_info[i].thread_id = i;
-        thread_info[i].N = N;
-        thread_info[i].source = source;
-        thread_info[i].curr = curr;
-        thread_info[i].next = next;
-        thread_info[i].delta = delta;
-        thread_info[i].iterations = iterations;
+    dim3 threadsPerBlock(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+    dim3 numBlocks((N + threadsPerBlock.x - 1) / threadsPerBlock.x, 
+                  (N + threadsPerBlock.y - 1) / threadsPerBlock.y, 
+                  (N + threadsPerBlock.z - 1) / threadsPerBlock.z);
 
-        thread_info[i].slice_3D.k_start = i*thickness+1;
-        int k_end = (i+1)*thickness+1;
-        thread_info[i].slice_3D.k_end = k_end > (N-1) ? N-1 : k_end;
+    // Main iteration loop
+    for (int iter = 0; iter < iterations; iter++) {
+        // Launch the boundary condition kernel
+        // apply_von_neuman_boundary_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
+        // cudaDeviceSynchronize();
 
-        thread_info[i].slice_3D.j_start = 0;
-        thread_info[i].slice_3D.j_end = N;
-        thread_info[i].slice_3D.i_start = 0;
-        thread_info[i].slice_3D.i_end = N;
-        thread_info[i].barrier = &barrier;
+        // // Launch the inner iteration kernel
+        // poisson_iteration_inner_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
+        // cudaDeviceSynchronize();
+        poisson_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
 
-        // Create the worker thread
-        if (pthread_create (&worker_threads[i], NULL, &worker_thread, &thread_info[i]) != 0)
-        {
-            fprintf (stderr, "Error creating worker thread!\n");
-        }
+        // Swap pointers
+        double* temp = d_curr;
+        d_curr = d_next;
+        d_next = temp;
     }
 
-#if defined(NO_MEMCOPY)
-    for (int n = 0; n < iterations; n++) {
-        while (worker_comms_get() != WORKERS_READY_TO_COPY) {
-            usleep(10);
-        }
+    // Copy the result back to the host
+    cudaMemcpy(curr, d_curr, N * N * N * sizeof(double), cudaMemcpyDeviceToHost);
 
-        for (int i = 0; i < threads; i++) {
-            double* temp = thread_info[i].curr;
-            thread_info[i].curr = thread_info[i].next;
-            thread_info[i].next = temp;
-        }
-        worker_comms_set(COPY_COMPLETE);
-    }
-#endif // NO_MEMCOPY
+    // Free device memory
+    cudaFree(d_source);
+    cudaFree(d_curr);
+    cudaFree(d_next);
+    free(next); // free the next buffer as it's no longer needed
 
-    // Wait for all the threads to finish using join ()
-    for (int i = 0; i < threads; i++)
-    {
-        pthread_join (worker_threads[i], NULL);
+    if (debug) {
+        printf("Finished solving.\n");
     }
 
-    // Free one of the buffers and return the correct answer in the other.
-    // The caller is now responsible for free'ing the returned pointer.
-    free(next);
-    worker_comms_deinit();
-
-#ifdef DEBUG
-    printf("Finished solving.\n");
-#endif // DEBUG
-
-    return (double*)curr;
+    return curr; // Return the result
 }
-
-
 
 int main(int argc, char** argv) {
     // Default settings for solver
-    int iterations = 10;
+    int iterations = 300;
     int n = 5;
     int threads = 3;
     float delta = 1;
@@ -194,7 +187,7 @@ int main(int argc, char** argv) {
             threads = atoi(optarg);
             break;
         case 'd':
-            // #define DEBUG
+            debug = true;
             break;
         default:
             fprintf(stderr, "Usage: poisson [-n size] [-x source x-poisition] [-y source y-position] [-z source z-position] [-a source amplitude]  [-i iterations] [-t threads] [-d] (for debug mode)\n");
@@ -226,13 +219,12 @@ int main(int argc, char** argv) {
     source[(z * n + y) * n + x] = amplitude;
 
     // Calculate the resulting field with mixed boundary conditions
-    double* result = poisson_mixed(n, source, iterations, threads, delta);
+    double* result = poisson_mixed(n, source, iterations, delta);
 
     // Print out the middle slice of the cube for validation
-#ifdef DEBUG
-    printf("--MIDDLE--\n");
-#endif // DEBUG
-
+    if (debug) {
+        printf("--MIDDLE--\n");
+    }
     for (int y = 0; y < n; ++y) {
         for (int x = 0; x < n; ++x) {
             printf("%0.5f ", result[((n / 2) * n + y) * n + x]);
