@@ -177,24 +177,25 @@ The a comparison of the old program with conditional control hazards and without
 
 #pagebreak()
 = Individual Topic 2 Isaac Cone - GPU
-Graphics Processing Units (GPUs) are a specialised piece of hardware in a computer with many cores optimised for performing repeated operations in parallel. This is in contrast to CPUs, which are designed to be generic for many kinds of operation and are therefore not optimised in this way. GPUs are therefore significantly faster in some situations due to a much higher memory bandwidth and instruction throughput. The optimsed hardware found in GPUs is useful across a range of domains including artificial intelligence, modelling real-world phenomena such as weather, and blockchain technologies. This report will discuss how GPU hardware can be applied to enhance the performance of the poisson algorithm.
+Graphics Processing Units (GPUs) are specialised hardware with many processing optimised for performing repeated operations. GPUs are significantly faster than CPUs in some applications due to massively parallel execution, a much higher memory bandwidth, and greater instruction throughput. GPUs are useful across a range of domains including artificial intelligence and modelling complex real-world phenomena such as weather. This section will discuss how a GPU, specifically NVIDIA 3070 Ti laptop GPU, can be leveraged to enhance the performance of the poisson algorithm.
 
-The leading GPU manufacturer, NVIDIA, allows developers to interact with their hardware using the Compute Unified Device Architecture (CUDA) API @nvidia_cuda_guide. This allows the user to define a kernel function, a number of blocks, and the number of threads per block. Each thread then independently executes the same kernel function in parallel. The API handles allocation of sections of the target array to each thread and automatically synchronises threads 
+NVIDIA GPU hardware can execute any user-defined operation using the Compute Unified Device Architecture (CUDA) API @nvidia_cuda_guide. 3070 Ti CUDA architecture consists of 48 Streaming Multiprocessors (SM) each with 128 CUDA cores, as shown in @fig:nvidia-gpu. These CUDA cores can each run up to eight threads. The CUDA API is configured to execute the kernel with a set number of blocks, which are allocated one to each SM, and a number of threads per block. The API automatically handles the allocation of computation to these threads. The poisson iterations are ideal for GPU computation, so it is expected that the 3070 Ti with 6144 CUDA cores will significantly outperform a CPU.
 
-GPU much faster
+#figure(
+  image("figures/gpu_diagram.png", width: 80%),
+  caption: [
+Multiprocessor and CUDA core architecture of the NVIDIA 3070 Ti GPU.  ],
+) <fig:nvidia-gpu>
 
-Uses parallel
+To simplify CUDA implementation, the poisson algorithm was reduced to a single kernel function, meaning it is unoptimised for the CPU. To leverage the GPU memory bandwidth the data needed for computation is entirely copied into the GPU VRAM. A limitation was identified from doing so, as for larger cubes the 8GB of VRAM on the 3070 Ti is too small to hold all of the data without more advanced memory management. The implementation in this report uses \#BLKS blocks with \#THRDS each.
 
-Different archiecture
+The GPU performance is compared to the optimal CPU result in @fig:cpu-vs-gpu. This shows the GPU reaches the same solution an order of magnitude faster, far outperforming any possible optimisations. The suspected VRAM limitations do impact results for cubes sized over 701. This is because the requried data for computation exceeds the 8GB of VRAM in the GPU. This would be avoided by using a GPU with more VRAM or by using memory management to segment the cube for copying in stages. The latter solution would introduce additional overhead however. Overall the GPU result is as expected.
 
-implemented Nvidia 3070ti using cuda toolkit
-
-brief explainer of how this was done - create kernel function and specify blocks, copy to GPU
-
-VRAM limitation, how could be fixed
-
-results
-
+#figure(
+  image("figures/cpu_versus_gpu.png", width: 60%),
+  caption: [
+NEED TO REDO THIS FOR NICER PLOT (COMPARE TO BEST CPU ONE)  ],
+) <fig:cpu-vs-gpu>
 #pagebreak()
 = Individual Topic 3 Daniel Hawes - SIMD
 
