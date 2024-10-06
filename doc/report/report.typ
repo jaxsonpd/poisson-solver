@@ -69,13 +69,22 @@ AMD64 CPUs use the x86-64 instruction set architecture. This is an extension of 
 #pagebreak()
 = Multithreading - easy - Daniel
 
-Multithreading was used to separate the program from working on a single core to multiple. This was one of many ways for optimizing the CPU performance. Multithreading is achieved by separating the calculation across multiple worker threads. Each thread is responsible for computing a portion of the cube, divided across slices in the k dimension. 
+Multithreading was used to improve CPU utilisation this was done by separating the program from working on a single core to multiple. This is achieved by separating the Poisson calculation across multiple worker threads. Each thread is responsible for computing a portion of the cube, divided across slices in the k dimension. The start of a slice is calculated through a simple formula seen below:
 
-Each worker thread takes in: the cube size, pointers to the current and next buffer of the cube, the slice dimensions and the number of iterations. This information is passed through the `workerThread_t` structure. 
+$
+k_"start" = 1 + (i ceil((N-2)))/t
+$
 
-To ensure there is synchronization between iterations, a barrier is implemented. The barrier uses a `pthread_barrier_t` structure and is used as a counter that is incremented each time a thread reaches the end of it's calculations. When the counter reaches the number of threads, the barrier is lifted and the threads can continue with the next iteration. 
+Where $i$ is the thread number $N$ is the number of nodes and $t$ is the number of threads.  The end of a slice is calculated in a similar way as:
 
-After each thread completes it calculations for one iteration, the buffers for next and current need to be swapped. A temporary pointer is set up that points to where the current buffer is pointing. The pointer to the current buffer now points to what the next buffer is pointing to. The next buffer then points to the what the temporary pointer is pointing to. This process works to swap the buffers so that the next iteration can be calculated, without using any memory copying operations.
+$
+k_"end"= (i+1) ceil((N-2))/t + 1, k_"end" = cases(
+  N-1 &"if" k_"end" > N-1  \
+  k_"end" &"otherwise"
+)
+$
+
+Each worker thread is passed the program variables (`curr`, `next` etc.) and the slice it is assigned, it then performs the required iterations applying Von Neumann and inner iterations where required. To prevent race conditions caused by parallel execution a barrier is used. The barrier uses a `pthread_barrier_t` with a limit equal to the number of the threads when all threads have completed an iteration and entered the barrier it lifts thus ensuring they are synchronised. After each thread completes its calculations for one iteration, the buffers for next and current need to be changed. This is done by swapping the pointers addresses which removes the need for expensive memory operations.
 
 The results of the multithreading implementation can be seen in #ref(<fig:thread-cmp>). The results show that as the number of threads is increased the execution time decreases. This is as expected as the program can make use of multiple cores in parallel. The solution reaches an execution time asymptote at approximately 20 threads after this point the execution time is near constant; However, the minimum times occur at 12 and 24 threads this is due to the processor that is being used to produce these results. These results were captured on a Intel i5 12500f processor which has 6 cores and 12 threads. The most common operation completed by the Poisson software is floating point arithmetic which requires a floating point unit. Two threads at a time can use the FPU as it takes time to load memory back and forth. But there is no additional benefit beyond this as the FPUs are saturated. Which is why the minimum value occurs at 12 threads.
 
