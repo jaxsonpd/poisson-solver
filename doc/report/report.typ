@@ -182,9 +182,7 @@ The a comparison of the software with and without conditional control hazards ca
 
 #pagebreak()
 = Individual Topic 2 Isaac Cone - GPU
-Graphics Processing Units (GPUs) are specialised hardware with many processing optimised for performing repeated operations. GPUs are significantly faster than CPUs in some applications due to massively parallel execution, a much higher memory bandwidth, and greater instruction throughput. This section will discuss how a GPU, specifically NVIDIA 3070 Ti laptop GPU, can be leveraged to enhance the performance of the poisson algorithm.
-
-The 3070 Ti architecture consists of 48 Streaming Multiprocessors (SM) each with 128 CUDA cores, as shown in @fig:nvidia-gpu. These cores run up to eight threads each. This hardware can execute any user-defined operation using the Compute Unified Device Architecture (CUDA) API @nvidia_cuda_guide. The CUDA API is configured to execute the kernel over a number of configurably sized blocks, which are allocated one to each SM, and a number of threads per block. The API automatically handles kernel execution allocation across the many threads. The poisson algorithm involves a single repeated operation, making it ideal for implementation on the GPU. It is expected that the 3070 Ti, which has 6144 CUDA cores will significantly outperform a CPU, particularly on larger cube sizes.
+Graphics Processing Units (GPUs) are specialised hardware with many processing optimised for performing repeated operations. GPUs are significantly faster than CPUs in some applications due to massively parallel execution, a much higher memory bandwidth, and greater instruction throughput. This section will discuss how a GPU, specifically NVIDIA 3070 Ti laptop GPU, can be leveraged to enhance the performance of the poisson algorithm. The 3070 Ti architecture shown in @fig:nvidia-gpu consists of 48 Streaming Multiprocessors (SM) each with 128 CUDA cores for a total of 6144 cores. These cores run up to eight threads each. The hardware executes a custom kernel function using the Compute Unified Device Architecture (CUDA) API @nvidia_cuda_guide. The API uses variably sized blocks of threads, and automatically handles allocation of threads and blocks to the hardware. The poisson algorithm involves a single repeated operation, making it ideal for implementation on the GPU. It is expected that the 3070 Ti, which has 6144 CUDA cores will significantly outperform a CPU, particularly on larger cube sizes.
 
 #figure(
   image("figures/gpu_diagram.png", width: 80%),
@@ -192,14 +190,15 @@ The 3070 Ti architecture consists of 48 Streaming Multiprocessors (SM) each with
 Multiprocessor and CUDA core architecture of the NVIDIA 3070 Ti GPU.  ],
 ) <fig:nvidia-gpu>
 
-To simplify CUDA implementation, the poisson algorithm was reduced to a single kernel function, no longer optimised for the CPU. To leverage the GPU VRAM bandwidth computations are performed entirely on data stored in the GPU VRAM. A limitation was identified from doing so, as for larger cubes the data exceeds 8GB, the amount of VRAM on the 3070 Ti. The program was then executed with a block size of 16*16The implementation in this report uses \#BLKS blocks with \#THRDS each.
+To simplify CUDA implementation, the poisson algorithm was reduced to a single kernel function, no longer optimised for the CPU. To leverage the GPU VRAM bandwidth, computations are performed entirely in the GPU VRAM. This has the limitation that the data size cannot exceed the GPU VRAM capacity, 8GB in this case. For execution on the 3070 Ti, the threads per block was set to 512 in an 8 thread cube. The $"gridSize"$ cube of blocks is then dynamically sized for a given $N$ by @eq:grid-size.
 
-The GPU performance is compared to the optimal CPU result in @fig:cpu-vs-gpu. This shows the GPU reaches the same solution an order of magnitude faster, far outperforming any possible optimisations. The suspected VRAM limitations do impact results for cubes sized over 701. This is because the requried data for computation exceeds the 8GB of VRAM in the GPU. This would be avoided by using a GPU with more VRAM or by using memory management to segment the cube for copying in stages. The latter solution would introduce additional overhead however. Overall the GPU result is as expected.
+$ "gridSize" = (N + "blockSize" - 1)/"blockSize" $ <eq:grid-size>
 
+@fig:cpu-vs-gpu compares the CUDA program to the optimal CPU program. For cubes up to 601 in size the GPU is twice as fast as the CPU. After this, data use exceeds 8GB, preventing execution on the 3070 Ti. This is a significant improvement, but not as significant as expected. This is because the CUDA program was written as a proof of concept and was not further optimised. This means there are likely significant gains that could be made. Batching data may avoid memory issues but with some overhead.
 #figure(
-  image("figures/cpu_versus_gpu.png", width: 60%),
+  image("figures/JPC_CPU_Razer_GPU.png", width: 60%),
   caption: [
-NEED TO REDO THIS FOR NICER PLOT (COMPARE TO BEST CPU ONE)  ],
+NVIDIA CUDA implementation of the poisson algorithm compared to optimal CPU solution.  ],
 ) <fig:cpu-vs-gpu>
 #pagebreak()
 = Individual Topic 3 Daniel Hawes - SIMD

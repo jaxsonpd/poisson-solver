@@ -44,14 +44,15 @@ def plot_results(filenames: List[str], labels: List[str], plot_type: str = "time
     plt.xlim(1, None)
     plt.ylim(1, None)
     plt.legend()  # Add a legend for the labels
-
+    plt.tight_layout()
+    
     return figure
 
 
 if __name__ == "__main__":
-    figure = plot_results(["./JPC_threads_n201_i300_mt40.csv", 
-                           "./JPC_threads_n401_i300_mt40.csv"],
-                           ["n=201", "n=401"], plot_type="thread")
+    figure = plot_results(["./Compilier-Opt/JPC_03_mn901_i300_t20.csv", 
+                           "./CUDA-cmp/gpu_mn601_i300_t1.csv"],
+                           ["Intel 12400F CPU -O3", "NVIDIA 3070 Ti Mobile GPU"], plot_type="time")
 
-    figure.savefig("JPC_thread_cmp.png")
+    figure.savefig("JPC_CPU_Razer_GPU.png")
     plt.show()
