@@ -69,9 +69,15 @@ AMD64 CPUs use the x86-64 instruction set architecture. This is an extension of 
 #pagebreak()
 = Multithreading - easy - Daniel
 
-row selection 
-memcopy
-barrier
+Multithreading was used to separate the program from working on a single core to multiple. This was one of many ways for optimizing the CPU performance. Multithreading is achieved by separating the calculation across multiple worker threads. Each thread is responsible for computing a portion of the cube, divided across slices in the k dimension. 
+
+Each worker thread takes in: the cube size, pointers to the current and next buffer of the cube, the slice dimensions and the number of iterations. This information is passed through the `workerThread_t` structure. 
+
+To ensure there is synchronization between iterations, a barrier is implemented. The barrier uses a `pthread_barrier_t` structure and is used as a counter that is incremented each time a thread reaches the end of it's calculations. When the counter reaches the number of threads, the barrier is lifted and the threads can continue with the next iteration. 
+
+After each thread completes it calculations for one iteration, the buffers for next and current need to be swapped. A temporary pointer is set up that points to where the current buffer is pointing. The pointer to the current buffer now points to what the next buffer is pointing to. The next buffer then points to the what the temporary pointer is pointing to. This process works to swap the buffers so that the next iteration can be calculated, without using any memory copying operations.
+
+The results of the multithreading implementation can be seen in (FIGURE). The results show that (Talk about results). 
 
 #pagebreak()
 = Cache - hard
@@ -101,51 +107,43 @@ barrier
 
 
 
-Profiling was used through-out all stages of this projects development. This was done to identify which areas of the program where the slowest and how often these slow areas where called. From these results optimisations where made to the code to reduce execution time. When selecting areas of the code to optimise the sections called most often were prioritised as these give a larger performance benefit then optimising slower less frequent functions. To make profiling easier the various components of the code where compartmentalised into functions, while this does add some execution time (due to stack overheads) it allows the profiling tool gprof to provide more granular results. 
+Profiling was used through-out all stages of this projects development to identify which areas of the program would benefit from optimisation. From these results optimisations where made to the code to reduce execution time. When selecting areas of the code to optimise the sections called most often were prioritised as these give a larger performance benefit than optimising slower less frequent functions. To make profiling easier the various components of the code where compartmentalised into functions, while this does add some execution time (due to stack overheads) it allows the profiling tool gprof to provide more granular results. 
 
-Profiling was conducted on both optimised and non-optimised code to gain a wholistic understanding of the programs execution. A breakdown of the execution times and call counts for a non-optimised run of the program with a 201 node cube over 300 iterations using 20 threads can be seen in #ref(<tab:non-optimised-profile>). The result of profiling using final optimisation parameters (-03) on the same cube size as before can be found in #ref(<tab:optimised-profile>).
+Profiling was conducted on both optimised and non-optimised code to gain a wholistic understanding of the programs execution. A breakdown of the execution times and call counts for a non-optimised run of the program with a 201 node cube over 300 iterations using 20 threads can be seen in #ref(<tab:non-optimised-profile>). The result of profiling using debug optimisation (-0g) on the same cube size as before can be found in #ref(<tab:optimised-profile>). 
 
 #figure(
   caption: [GProf results for a non-optimised run of the program with 201 nodes 300 iterations and 30 threads.],
   table(
-  columns: (35%, 15%, 25%),
-  align: (left, center, center),
-  table.header([Function], [Call Count], [Time per call (ms)]),
+  columns: (35%, 20%, 15%, 25%),
+  align: (left, center, center, center),
+  table.header([Function], [Percentage], [Call Count], [Time per call (ms)]),
   table.hline(stroke: 1pt),
-  [`poisson_iteration_inner_slice`], [5965], [1.25],
-  [`memcopy_3D`], [5977], [0.61],
-  [`apply_von_neuman_boundary_slice`], [5956], [0.05],
-  [Barrier waits cumulative], [11945], [0],
-  [Setup], [0], [0],
+  [`poisson_iteration_inner_slice`], [96.47%], [2251], [24.05],
+  [`apply_von_neuman_boundary_slice`], [3.53%], [2222], [0.91],
+  [`wait_to_copy`], [0%], [2400], [0],
+  [Setup], [0%], [1], [0],
   table.hline(stroke: 1pt),
 )) <tab:non-optimised-profile>
 
 #figure(
-  caption: [GProf results for a O3 optimised run of the program with 201 nodes 300 iterations and 30 threads.],
+  caption: [GProf results for a Og optimised run of the program with 201 nodes 300 iterations and 30 threads.],
   table(
-  columns: (35%, 15%, 25%),
-  align: (left, center, center),
-  table.header([Function], [Call Count], [Time per call (us)]),
+  columns: (35%, 20%, 15%, 25%),
+  align: (left, center, center, center),
+  table.header([Function], [Percentage], [Call Count], [Call Time (ms)]),
   table.hline(stroke: 1pt),
-  [`poisson_iteration_inner_slice`], [5958], [676.40 ],
-  [`memcopy_3D`], [5971], [410.32 ],
-  [`apply_von_neuman_boundary_slice`], [5926], [37.12],
-  [Barrier waits cumulative], [N/A], [N/A],
-  [Setup], [0], [0],
+  [`poisson_iteration_inner_slice`], [93.45%], [2269], [11.45],
+  [`apply_von_neuman_boundary_slice`], [6.55%], [2275], [0.80],
+  [Barrier waits cumulative], [0%], [2389], [0],
+  [Setup], [0%], [1], [0],
   table.hline(stroke: 1pt),
 )) <tab:optimised-profile>
 
-The results found in #ref(<tab:non-optimised-profile>) and #ref(<tab:optimised-profile>, supplement: "") show that in both runs the largest time cost is the iteration over the inner slice of the cube. This is expected as it performs the majority of the floating point operations in the software. The next highest execution time is the application of the Von Neumann boundary. 
+The results found in #ref(<tab:non-optimised-profile>) and #ref(<tab:optimised-profile>, supplement: "") show that in both runs the largest time cost is the iteration over the inner slice of the cube. This is expected as it performs the majority of the floating point operations in the software. As expected the compiler optimisations have reduced the iteration time by more than half. Interestingly the Von Neumann boundary condition execution time was only reduced by 12%. This may be due to the significant number conditional checks required by this function which cannot be optimised out.  
 
-In earlier iterations of the program the Von Neumann boundary was called at every inner loop of the main poisson iteration. Based on profiling the team was able to identify this as a bottle neck as it is un-necessary to call this for all if the inner nodes and move the updates to its own self contained iteration that only iterates over the outside nodes. Another example of profiling helping in optimisation of code is with the barrier waits that are used to synchronise the threads. Originally the team hypothesised that these waits would greatly increase the execution time as threads take different amounts of time to complete due to cpu allocation and the way the cube nodes are divided amongst them. By profiling the code with these barriers implemented it was discovered as can be seen in #ref(<tab:non-optimised-profile>) that the barrier waits do not add any appreciable execution time and in the optimised version of the code seen in #ref(<tab:optimised-profile>) are even expanded out of there respective functions and executed in the code itself with no function call overhead. Without profiling this would have been much harder to identify and solve.
+In earlier iterations of the program the Von Neumann boundary was called at every inner loop of the main poisson iteration. Based on profiling the team was able to identify this as a bottle neck as it is un-necessary to call this for all if the inner nodes and move the updates to its own self contained iteration that only iterates over the outside nodes. Reducing the number of conditional checks needed thus reducing the execution time as there are less instructions per iteration.
 
-
-
-
-
-- Python script
-
-- gprof outputs and how they were used
+Another example of profiling helping in optimisation of code is with the barrier waits that are used to synchronise the threads. Originally the team hypothesised that these waits would greatly increase the execution time as threads take different amounts of time to complete due to cpu allocation and the way the cube nodes are divided amongst them. By profiling the code with these barriers implemented it was discovered as can be seen in #ref(<tab:non-optimised-profile>) that the barrier waits do not add any appreciable execution time and in the optimised version of the code seen in #ref(<tab:optimised-profile>) are even expanded out of there respective functions and executed in the code itself with no function call overhead. Without profiling this would have been much harder to identify and solve.
  
 #pagebreak()
 = Compiler Optimisation - easy 
@@ -198,6 +196,8 @@ NEED TO REDO THIS FOR NICER PLOT (COMPARE TO BEST CPU ONE)  ],
 ) <fig:cpu-vs-gpu>
 #pagebreak()
 = Individual Topic 3 Daniel Hawes - SIMD
+
+Single Instruction, Multiple Data (SIMD) is a technique used to perform the same operation on multiple data points simulataneously. This is particularly useful in applications where the same operation is performed over large data sets, such as with large 3D arrays. 
 
 #pagebreak()
 #bibliography("bibliography.bib", title: "References", style: "institute-of-electrical-and-electronics-engineers")
