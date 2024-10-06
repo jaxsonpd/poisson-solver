@@ -17,7 +17,7 @@ poisson.s: poisson
 	objdump -S --disassemble $< > $@
 
 poisson-o3: $(SOURCE)
-	$(CC) $(CFLAGS) $^ $(LDLIBS) -o3 -o $@
+	$(CC) $(CFLAGS) -O3 $^ $(LDLIBS) -o $@
 
 poisson-profile: $(SOURCE)
 	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -o $@
