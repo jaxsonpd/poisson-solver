@@ -16,7 +16,7 @@
 #include <device_launch_parameters.h>
 
 #define PRECISION double
-#define BLOCK_SIZE 4
+#define BLOCK_SIZE 8
 
 /**
  * poisson.c
@@ -100,28 +100,31 @@ double* poisson_mixed(int N, double* source, int iterations, float delta) {
 
     // Allocate device memory
     double *d_source, *d_curr, *d_next;
-    cudaMalloc((void**)&d_source, N * N * N * sizeof(double));
-    cudaMalloc((void**)&d_curr, N * N * N * sizeof(double));
-    cudaMalloc((void**)&d_next, N * N * N * sizeof(double));
+    cudaError_t ex;
+    ex = cudaMalloc((void**)&d_source, N * N * N * sizeof(double));
+    if (ex != 0) {
+        while(1);
+    }
+    ex = cudaMalloc((void**)&d_curr, N * N * N * sizeof(double));
+    if (ex != 0) {
+        while(1);
+    }
+    ex = cudaMalloc((void**)&d_next, N * N * N * sizeof(double));
+    if (ex != 0) {
+        while(1);
+    }
 
     // Copy data to device
     cudaMemcpy(d_source, source, N * N * N * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_curr, next, N * N * N * sizeof(double), cudaMemcpyHostToDevice);
 
+    int gridSize = (N + BLOCK_SIZE - 1) / BLOCK_SIZE; // Calculate grid size
+
     dim3 threadsPerBlock(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-    dim3 numBlocks((N + threadsPerBlock.x - 1) / threadsPerBlock.x, 
-                  (N + threadsPerBlock.y - 1) / threadsPerBlock.y, 
-                  (N + threadsPerBlock.z - 1) / threadsPerBlock.z);
+    dim3 numBlocks(gridSize, gridSize, gridSize);
 
     // Main iteration loop
     for (int iter = 0; iter < iterations; iter++) {
-        // Launch the boundary condition kernel
-        // apply_von_neuman_boundary_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
-        // cudaDeviceSynchronize();
-
-        // // Launch the inner iteration kernel
-        // poisson_iteration_inner_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
-        // cudaDeviceSynchronize();
         poisson_slice<<<numBlocks, threadsPerBlock>>>(N, d_source, d_curr, d_next, delta);
 
         // Swap pointers

@@ -26,7 +26,7 @@ def setup_cmd_args() ->argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Profile the poisson calculation program with changing nodes")
 
     parser.add_argument("-n", "--nodes", nargs="?", action="store", 
-                        default=11,
+                        default=101,
                         help="""max number of nodes to calculate""")
     
     parser.add_argument("-i", "--iterations", nargs="?", action="store",
