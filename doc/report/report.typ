@@ -69,9 +69,15 @@ AMD64 CPUs use the x86-64 instruction set architecture. This is an extension of 
 #pagebreak()
 = Multithreading - easy - Daniel
 
-row selection 
-memcopy
-barrier
+Multithreading was used to separate the program from working on a single core to multiple. This was one of many ways for optimizing the CPU performance. Multithreading is achieved by separating the calculation across multiple worker threads. Each thread is responsible for computing a portion of the cube, divided across slices in the k dimension. 
+
+Each worker thread takes in: the cube size, pointers to the current and next buffer of the cube, the slice dimensions and the number of iterations. This information is passed through the `workerThread_t` structure. 
+
+To ensure there is synchronization between iterations, a barrier is implemented. The barrier uses a `pthread_barrier_t` structure and is used as a counter that is incremented each time a thread reaches the end of it's calculations. When the counter reaches the number of threads, the barrier is lifted and the threads can continue with the next iteration. 
+
+After each thread completes it calculations for one iteration, the buffers for next and current need to be swapped. A temporary pointer is set up that points to where the current buffer is pointing. The pointer to the current buffer now points to what the next buffer is pointing to. The next buffer then points to the what the temporary pointer is pointing to. This process works to swap the buffers so that the next iteration can be calculated, without using any memory copying operations.
+
+The results of the multithreading implementation can be seen in (FIGURE). The results show that (Talk about results). 
 
 #pagebreak()
 = Cache - hard
@@ -192,6 +198,8 @@ NEED TO REDO THIS FOR NICER PLOT (COMPARE TO BEST CPU ONE)  ],
 ) <fig:cpu-vs-gpu>
 #pagebreak()
 = Individual Topic 3 Daniel Hawes - SIMD
+
+Single Instruction, Multiple Data (SIMD) is a technique used to perform the same operation on multiple data points simulataneously. This is particularly useful in applications where the same operation is performed over large data sets, such as with large 3D arrays. 
 
 #pagebreak()
 #bibliography("bibliography.bib", title: "References", style: "institute-of-electrical-and-electronics-engineers")
