@@ -77,7 +77,14 @@ To ensure there is synchronization between iterations, a barrier is implemented.
 
 After each thread completes it calculations for one iteration, the buffers for next and current need to be swapped. A temporary pointer is set up that points to where the current buffer is pointing. The pointer to the current buffer now points to what the next buffer is pointing to. The next buffer then points to the what the temporary pointer is pointing to. This process works to swap the buffers so that the next iteration can be calculated, without using any memory copying operations.
 
-The results of the multithreading implementation can be seen in (FIGURE). The results show that (Talk about results). 
+The results of the multithreading implementation can be seen in #ref(<fig:thread-cmp>). The results show that as the number of threads is increased the execution time decreases. This is as expected as the program can make use of multiple cores in parallel. The solution reaches an execution time asymptote at approximately 20 threads after this point the execution time is near constant; However, the minimum times occur at 12 and 24 threads this is due to the processor that is being used to produce these results. These results were captured on a Intel i5 12500f processor which has 6 cores and 12 threads. The most common operation completed by the Poisson software is floating point arithmetic which requires a floating point unit. Two threads at a time can use the FPU as it takes time to load memory back and forth. But there is no additional benefit beyond this as the FPUs are saturated. Which is why the minimum value occurs at 12 threads.
+
+#figure(
+  image("figures/JPC_thread_cmp.png", width: 60%),
+  caption: [
+    A comparison of the poisson solver software execution times with different number of threads used
+  ],
+) <fig:thread-cmp>
 
 #pagebreak()
 = Cache - hard
@@ -164,7 +171,7 @@ In the poission iteration software there are several control hazards caused by c
 
 The reason our implementation required so many conditional instructions is that we use the same nested `for` loop to iterate over both the Von Neumann boundary (the dircilc boundary can be applied once during initialisation) and the inner nodes of the cube. It was hypothesised that moving these out of the same loop and reducing the Von Neumann iteration to only over the outer nodes would reduce the number of condition branch control hazards per iteration and thus overall. This was achieved by splitting each iteration into to components first the Von Neumann boundary is applied to only the nodes required then the nested loop only updated the inner nodes. This change completely removed the conditional instructions in the main iteration loop (which is called most often) removing the largest control hazard from the program. 
 
-The a comparison of the old program with conditional control hazards and without can be seen in #ref(<fig:conditional-branch-cmp>). This figure shows that the programs execution has been reduced by $10%$. With the real benefits occur at the large cube sizes as the more iterations mean more conditional branch issues. This result is expected as by reducing the number of conditional branches the CPU can optimise use of pipelining as the number of possible pipeline flushes is reduced. This change also has the added benefit of reducing the number of instructions per iteration. This is due to the Von Neumann boundary application only iterating over nodes that will need to be applied to as opposed to all nodes in the cube.
+The a comparison of the software with and without conditional control hazards can be seen in #ref(<fig:conditional-branch-cmp>). This shows that the programs execution has been reduced by $10%$. With the real benefits occurring at larger cube sizes as the more iterations mean more conditional branch issues. This result is expected as by reducing the number of conditional branches the CPU can optimise use of pipelining as the number of possible pipeline flushes is reduced. This change also has the added benefit of reducing the number of instructions per iteration. This is due to the Von Neumann boundary application only iterating over nodes that it will need to be applied to as opposed to all nodes in the cube. Crucially this gap still appears when optimisation is applied showing that the problem cannot be solved by the complier.
 
 #figure(
   image("figures/JPC_branch_predict_cmp.png", width: 60%),

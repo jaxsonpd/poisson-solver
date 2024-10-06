@@ -41,19 +41,17 @@ def plot_results(filenames: List[str], labels: List[str], plot_type: str = "time
         plt.xlabel("Cube Size")
     
     plt.ylabel("Time (s)")
-    plt.xlim(0, None)
-    plt.ylim(0, None)
+    plt.xlim(1, None)
+    plt.ylim(1, None)
     plt.legend()  # Add a legend for the labels
 
     return figure
 
 
 if __name__ == "__main__":
-    figure = plot_results(["./JPC_JKI00_mn601_i300_t20.csv", 
-                           "./JPC_KIJ00_mn901_i300_t20.csv", 
-                           "./JPC_KJI00_mn901_i300_t20.csv",
-                           "./JPC_IKJ00_mn601_i300_t20.csv"],
-                           ["j, k, i", "k, i, j", "k, j, i", "i, k, j"])
+    figure = plot_results(["./JPC_threads_n201_i300_mt40.csv", 
+                           "./JPC_threads_n401_i300_mt40.csv"],
+                           ["n=201", "n=401"], plot_type="thread")
 
-    figure.savefig("JPC_caching_cmp.png")
+    figure.savefig("JPC_thread_cmp.png")
     plt.show()
