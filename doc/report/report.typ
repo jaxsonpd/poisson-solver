@@ -103,39 +103,37 @@ barrier
 
 Profiling was used through-out all stages of this projects development to identify which areas of the program would benefit from optimisation. From these results optimisations where made to the code to reduce execution time. When selecting areas of the code to optimise the sections called most often were prioritised as these give a larger performance benefit than optimising slower less frequent functions. To make profiling easier the various components of the code where compartmentalised into functions, while this does add some execution time (due to stack overheads) it allows the profiling tool gprof to provide more granular results. 
 
-Profiling was conducted on both optimised and non-optimised code to gain a wholistic understanding of the programs execution. A breakdown of the execution times and call counts for a non-optimised run of the program with a 201 node cube over 300 iterations using 20 threads can be seen in #ref(<tab:non-optimised-profile>). The result of profiling using final optimisation parameters (-03) on the same cube size as before can be found in #ref(<tab:optimised-profile>).
+Profiling was conducted on both optimised and non-optimised code to gain a wholistic understanding of the programs execution. A breakdown of the execution times and call counts for a non-optimised run of the program with a 201 node cube over 300 iterations using 20 threads can be seen in #ref(<tab:non-optimised-profile>). The result of profiling using debug optimisation (-0g) on the same cube size as before can be found in #ref(<tab:optimised-profile>). 
 
 #figure(
   caption: [GProf results for a non-optimised run of the program with 201 nodes 300 iterations and 30 threads.],
   table(
-  columns: (35%, 15%, 25%),
-  align: (left, center, center),
-  table.header([Function], [Call Count], [Time per call (ms)]),
+  columns: (35%, 20%, 15%, 25%),
+  align: (left, center, center, center),
+  table.header([Function], [Percentage], [Call Count], [Time per call (ms)]),
   table.hline(stroke: 1pt),
-  [`poisson_iteration_inner_slice`], [5965], [1.25],
-  [`memcopy_3D`], [5977], [0.61],
-  [`apply_von_neuman_boundary_slice`], [5956], [0.05],
-  [Barrier waits cumulative], [11945], [0],
-  [Setup], [0], [0],
+  [`poisson_iteration_inner_slice`], [96.47%], [2251], [24.05],
+  [`apply_von_neuman_boundary_slice`], [3.53%], [2222], [0.91],
+  [`wait_to_copy`], [0%], [2400], [0],
+  [Setup], [0%], [1], [0],
   table.hline(stroke: 1pt),
 )) <tab:non-optimised-profile>
 
 #figure(
-  caption: [GProf results for a O3 optimised run of the program with 201 nodes 300 iterations and 30 threads.],
+  caption: [GProf results for a Og optimised run of the program with 201 nodes 300 iterations and 30 threads.],
   table(
-  columns: (35%, 15%, 25%),
-  align: (left, center, center),
-  table.header([Function], [Call Count], [Time per call (us)]),
+  columns: (35%, 20%, 15%, 25%),
+  align: (left, center, center, center),
+  table.header([Function], [Percentage], [Call Count], [Call Time (ms)]),
   table.hline(stroke: 1pt),
-  [`poisson_iteration_inner_slice`], [5958], [676.40 ],
-  [`memcopy_3D`], [5971], [410.32 ],
-  [`apply_von_neuman_boundary_slice`], [5926], [37.12],
-  [Barrier waits cumulative], [N/A], [N/A],
-  [Setup], [0], [0],
+  [`poisson_iteration_inner_slice`], [93.45%], [2269], [11.45],
+  [`apply_von_neuman_boundary_slice`], [6.55%], [2275], [0.80],
+  [Barrier waits cumulative], [0%], [2389], [0],
+  [Setup], [0%], [1], [0],
   table.hline(stroke: 1pt),
 )) <tab:optimised-profile>
 
-The results found in #ref(<tab:non-optimised-profile>) and #ref(<tab:optimised-profile>, supplement: "") show that in both runs the largest time cost is the iteration over the inner slice of the cube. This is expected as it performs the majority of the floating point operations in the software. The next highest execution time is the application of the Von Neumann boundary. 
+The results found in #ref(<tab:non-optimised-profile>) and #ref(<tab:optimised-profile>, supplement: "") show that in both runs the largest time cost is the iteration over the inner slice of the cube. This is expected as it performs the majority of the floating point operations in the software. As expected the compiler optimisations have reduced the iteration time by more than half. Interestingly the Von Neumann boundary condition execution time was only reduced by 12%. This may be due to the significant number conditional checks required by this function which cannot be optimised out.  
 
 In earlier iterations of the program the Von Neumann boundary was called at every inner loop of the main poisson iteration. Based on profiling the team was able to identify this as a bottle neck as it is un-necessary to call this for all if the inner nodes and move the updates to its own self contained iteration that only iterates over the outside nodes. Reducing the number of conditional checks needed thus reducing the execution time as there are less instructions per iteration.
 
