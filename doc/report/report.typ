@@ -69,20 +69,15 @@ AMD64 CPUs use the x86-64 instruction set architecture. This is an extension of 
 #pagebreak()
 = Multithreading - easy - Daniel
 
-Multithreading can be used to separate a program from working on a single core to multiple. This optimizes the CPU performance. Multithreading is achieved by separating the calculation across multiple worker threads. Each thread is responsible for computing a portion of the cube, split across the k dimension. 
+Multithreading was used to separate the program from working on a single core to multiple. This was one of many ways for optimizing the CPU performance. Multithreading is achieved by separating the calculation across multiple worker threads. Each thread is responsible for computing a portion of the cube, divided across slices in the k dimension. 
 
-Each worker thread takes in the cube size, pointers to the current and next buffer of the cube, the slice dimensions and the number of iterations. This information is passed through the 'workerThread_t' structure. 
+Each worker thread takes in: the cube size, pointers to the current and next buffer of the cube, the slice dimensions and the number of iterations. This information is passed through the `workerThread_t` structure. 
 
-Each thread works on a portion of the cube defined by it's i, j and k parameters given when the thread is created. Each thread works on its portion of the cube and either copies its calculation to memory of the 'next' buffer. After the last thread completes it calculations for the iteration, the contents of the current buffer are copied to a temporary buffer, and the next buffer is copied to the current buffer.(DIAGRAM?) To ensure that race conditions don't occur during this process, a mutex is used to ensure that no threads are writing to the same memory location at the same time.
+To ensure there is synchronization between iterations, a barrier is implemented. The barrier uses a `pthread_barrier_t` structure and is used as a counter that is incremented each time a thread reaches the end of it's calculations. When the counter reaches the number of threads, the barrier is lifted and the threads can continue with the next iteration. 
 
+After each thread completes it calculations for one iteration, the buffers for next and current need to be swapped. A temporary pointer is set up that points to where the current buffer is pointing. The pointer to the current buffer now points to what the next buffer is pointing to. The next buffer then points to the what the temporary pointer is pointing to. This process works to swap the buffers so that the next iteration can be calculated, without using any memory copying operations.
 
-To ensure there is synchronization between threads swapping buffers, a barrier is used at the end if each iteration. The barrier uses 'pthread_barrier_t'. This barrier is a counter that is incremented each time a thread reaches the end of it's calculations. When the counter reaches the number of threads, the barrier is removed and the threads can continue to the next iteration. When the last thread lifts the barrier, the threads can begin their calculations for the next iteration.
-
-
-
-row selection 
-memcopy
-barrier
+The results of the multithreading implementation can be seen in (FIGURE). The results show that (Talk about results). 
 
 #pagebreak()
 = Cache - hard
