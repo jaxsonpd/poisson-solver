@@ -29,14 +29,6 @@ void wait_to_copy(workerThread_t* worker_info) {
 }
 
 /**
- * @brief Wait before starting new iteration
- *
- */
-void wait_to_start_next(workerThread_t* worker_info) {
-    pthread_barrier_wait(worker_info->barrier);
-}
-
-/**
  * @brief The worker thread function
  * @param pargs a WorkerThread_t pointer
  *
@@ -64,8 +56,6 @@ void* worker_thread(void* pargs) {
 #else
         memcopy_3D(N, worker_info->curr, worker_info->next, worker_info->slice_3D);
 #endif // NO_MEMCOPY
-        wait_to_start_next(worker_info);
-
     }
 
     return NULL;
