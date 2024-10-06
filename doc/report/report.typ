@@ -210,5 +210,7 @@ NEED TO REDO THIS FOR NICER PLOT (COMPARE TO BEST CPU ONE)  ],
 #pagebreak()
 = Individual Topic 3 Daniel Hawes - SIMD
 
+Single Instruction, Multiple Data (SIMD) is a technique used to perform the same operation on multiple data points simulataneously. This is particularly useful in applications where the same operation is performed over large data sets, such as with large 3D arrays. 
+
 #pagebreak()
 #bibliography("bibliography.bib", title: "References", style: "institute-of-electrical-and-electronics-engineers")
