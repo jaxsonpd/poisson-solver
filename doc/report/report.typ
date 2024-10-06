@@ -194,9 +194,10 @@ To simplify CUDA implementation, the poisson algorithm was reduced to a single k
 
 $ "gridSize" = (N + "blockSize" - 1)/"blockSize" $ <eq:grid-size>
 
-@fig:cpu-vs-gpu compares the CUDA program to the optimal CPU program. For cubes up to 601 in size the GPU is twice as fast as the CPU. After this, data use exceeds 8GB, preventing execution on the 3070 Ti. This is a significant improvement, but not as significant as expected. This is because the CUDA program was written as a proof of concept and was not further optimised. This means there are likely significant gains that could be made. Batching data may avoid memory issues but with some overhead.
+@fig:cpu-vs-gpu compares the CUDA program to the optimal CPU program. For a 101 cube, the CPU outperforms the GPU. This is because the overhead from copying to VRAM exceeds the benefit of increased thread count. As cube sizes grow, the GPU  significantly outperforms the CPU. This is because the advantage of massively parallel execution becomes more pronounced with more computations. Above a 601-sized cube, data use exceeds 8GB, preventing execution on the 3070 Ti. This memory limitation could be avoided by batching data into smaller sections, but this would add overhead. Additionally, as the CUDA program was written as a proof of concept without further optimisation, it is likely there are CUDA-specific optimisations that could realise significant performance improvements.
+
 #figure(
-  image("figures/JPC_CPU_Razer_GPU.png", width: 60%),
+  image("figures/JPC_CPU_Razer_GPU.png", width: 50%),
   caption: [
 NVIDIA CUDA implementation of the poisson algorithm compared to optimal CPU solution.  ],
 ) <fig:cpu-vs-gpu>
