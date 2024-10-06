@@ -1,4 +1,7 @@
 {
   "files.eol": "\n",
-  "C_Cpp_Runner.msvcBatchPath": ""
+  "C_Cpp_Runner.msvcBatchPath": "",
+  "files.associations": {
+    "array": "c"
+  }
 }
