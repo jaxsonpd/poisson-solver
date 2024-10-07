@@ -97,26 +97,33 @@ The results of the multithreading implementation can be seen in #ref(<fig:thread
 
 #pagebreak()
 = Cache - hard
-#figure(
-  caption: [Memory access cost at various cache levels for the AMD Ryzen 6900HX.],
-  table(
-  columns: (15%, 25%, 25%),
-  align: (left, center, center),
-  table.header([Memory], [Read Instructions], [Access Count]),
-  table.hline(stroke: 1pt),
-  [L1 Cache], [X], [X],
-  [L2 Cache], [X], [X],
-  [L3 Cache], [X], [X],
-  [System], [X], [X],
-  table.hline(stroke: 1pt),
-)) <tab:cache-data>
+
+The Poisson algorithm requires a large number of memory operations to load the data from the respective arrays and store the result. These memory operations can add significant overhead. This is because the read/write time of DRAM is significantly higher than the execution time of the CPU. Modern CPUs minimise this impact with small high speed memory caches. These store recently accessed data, minimising costly DRAM access operations. As discussed in Section 1, the largest cache on the analysed CPU is 16MB. This is not enough to store even one of the arrays needed for a 401 node cube which has a size of 515MB. This means the cache can only store small sections of memory. Optimising the use of cached memory improves cache utilisation, which can significant improve program execution time.
+
+The largest number of memory operations in the code occur during the computation of the inner nodes of the cube. This uses three nested for loops that iterate over the layers, columns, and rows. These iterations can be executed in any order to achieve the correct result. One way to ensure optimal cache utilisation is to consider spatial locality when accessing memory. This means that neighbouring data in memory will be accessed consecutively, so the required data will almost always be located in the cache for each node. To achieve this, the optimal iteration scheme is for the inner loop to iterate along the x-axis (a row), as it increments by a single item in memory each iteration. 
+
+The performance for different iteration schemes is shown in @fig:caching-cmp. As seen in the plot iteration schemes where the inner most loop is the x axis outperform any other scheme. With the execution time being directly proportional to what iteration level the x axis is performed. The difference in execution time is significant with the x, z, y iteration scheme being five times slower than the z, y, x. 
 
 #figure(
   image("figures/JPC_caching_cmp.png", width: 60%),
   caption: [
-    A comparison of the poisson solver software execution times with different iteration schemes showing the effect of cache utilisation.
+    A comparison of execution time for various cube sizes with a range of iteration schemes.
   ],
 ) <fig:caching-cmp>
+
+This performance differences can be explained by examining the number of cache misses. If the CPU needs to access data that is not in the cache, this is a miss, and the CPU must then read this data from DRAM which is significantly slower. @tab:cache-data compares the L1 cache read and write miss rates for the same program using the best and worst performing iteration schemes respectively. The total number of memory accesses is equal, but the optimal iteration method has approximately five times less misses, indicating significantly improved cache utilisation hence the lower excution time.
+
+#figure(
+  caption: [Memory access cost at various cache levels for the AMD Ryzen 6900HX.],
+  table(
+  columns: (15%, 15%, 15%, 15%, 15%),
+  align: (center, center, center, center, center),
+  table.header([Iteration], [Dmr], [Dmr %], [Dmw], [Dmw %]),
+  table.hline(stroke: 1pt),
+  [i, k, j], [908,929,991], [5.03], [296,704,937], [96.7],
+  [k, j, i], [168,924,763], [0.93], [42,754,806], [14.0],
+  table.hline(stroke: 1pt),
+)) <tab:cache-data>
 
 #pagebreak()
 = Profiling - easy - Jack
