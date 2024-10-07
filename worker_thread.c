@@ -44,8 +44,8 @@ void* worker_thread(void* pargs) {
             apply_von_neuman_boundary_slice(N, worker_info->source, worker_info->curr, worker_info->next, worker_info->delta, worker_info->slice_3D);
         }
         // poisson_iteration_inner_slice(N, worker_info->source, worker_info->curr, worker_info->next, worker_info->delta, worker_info->slice_3D);
-        poisson_iteration_inner_slice_no_SIMD(N, worker_info->source, worker_info->curr, worker_info->next, worker_info->delta, worker_info->slice_3D);
-        // poisson_iteration_inner_slice_SIMD(N, worker_info->source, worker_info->curr, worker_info->next, worker_info->delta, worker_info->slice_3D);
+        // poisson_iteration_inner_slice_SIMD_half(N, worker_info->source, worker_info->curr, worker_info->next, worker_info->delta, worker_info->slice_3D);
+        poisson_iteration_inner_slice_SIMD(N, worker_info->source, worker_info->curr, worker_info->next, worker_info->delta, worker_info->slice_3D);
 #else
         poisson_iteration_slow(N, worker_info->source, worker_info->curr, worker_info->next, worker_info->delta, worker_info->slice_3D);
 #endif // SPLIT_ITERATION

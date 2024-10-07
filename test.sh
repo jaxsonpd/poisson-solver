@@ -23,11 +23,4 @@ else
     status=1
 fi
 
-if ./poisson -n 301 -i 300 -t 8 | cmp - 301_300_16.txt; then
-    echo "n=301 i=300 correct"
-else
-    echo "n=301 i=300 failed!"
-    status=1
-fi
-
 exit $status

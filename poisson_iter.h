@@ -73,12 +73,6 @@ void poisson_iteration_slow(int N, double* source, double* curr, double* next, f
  */
 void poisson_iteration_inner_slice_SIMD(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D);
 
-/** 
- * @brief Uses SIMD Indexing but not idx and not SIMD
- * 
- */
-void poisson_iteration_inner_slice_no_SIMD(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D);
-
 /**
  * @brief Perform one iteration of the poisson equation using SIMD for half as many vectors 
  *

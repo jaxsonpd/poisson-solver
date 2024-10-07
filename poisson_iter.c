@@ -212,29 +212,6 @@ int intex_SIMD(int N, int z, int y, int x) {
     return ((z * N) + y) * N + x;
 }
 
-void poisson_iteration_inner_slice_no_SIMD(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D) {
-    int j_start = slice_3D.j_start != 0 ? slice_3D.j_start : 1;
-    int j_end = slice_3D.j_end != N ? slice_3D.j_end : N - 1;
-
-    int i_start = slice_3D.i_start != 0 ? slice_3D.i_start : 1;
-    int i_end = slice_3D.i_end != N ? slice_3D.i_end : N - 1;
-
-    for (int k = slice_3D.k_start; k < slice_3D.k_end; k++) {
-        for (int j = j_start; j < j_end; j++) {
-            for (int i = i_start; i < i_end; i++) {
-                next[intex_SIMD(N, k, j, i)] = (curr[intex_SIMD(N, k, j, i + 1)] +
-                                                 curr[intex_SIMD(N, k, j, i - 1)] +
-                                                 curr[intex_SIMD(N, k, j + 1, i)] +
-                                                 curr[intex_SIMD(N, k, j - 1, i)] +
-                                                 curr[intex_SIMD(N, k + 1, j, i)] +
-                                                 curr[intex_SIMD(N, k - 1, j, i)]
-                    - delta * delta * source[intex_SIMD(N, k, j, i)]) / 6;
-            }
-        }
-    }
-
-}
-
 void poisson_iteration_inner_slice_SIMD(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D) {
     int j_start = slice_3D.j_start != 0 ? slice_3D.j_start : 1;
     int j_end = slice_3D.j_end != N ? slice_3D.j_end : N - 1;
@@ -248,7 +225,9 @@ void poisson_iteration_inner_slice_SIMD(int N, double* source, double* curr, dou
     for (int k = slice_3D.k_start; k < slice_3D.k_end; k++) {
         for (int j = j_start; j < j_end; j++) {
             int i;
-            for (int i = i_start; i <= i_end - 4; i += 4) {
+            // Main SIMD loop (process in blocks of 4)
+            for (i = i_start; i <= i_end - 4; i += 4) {
+                // Load the current values into vectors
                 __m256d curr_vec1 = _mm256_loadu_pd(&curr[intex_SIMD(N, k, j, i + 1)]);
                 __m256d curr_vec2 = _mm256_loadu_pd(&curr[intex_SIMD(N, k, j, i - 1)]);
                 __m256d curr_vec3 = _mm256_loadu_pd(&curr[intex_SIMD(N, k, j + 1, i)]);
@@ -257,6 +236,7 @@ void poisson_iteration_inner_slice_SIMD(int N, double* source, double* curr, dou
                 __m256d curr_vec6 = _mm256_loadu_pd(&curr[intex_SIMD(N, k - 1, j, i)]);
                 __m256d source_vec = _mm256_loadu_pd(&source[intex_SIMD(N, k, j, i)]);
 
+                // Perform calculations on vectors
                 __m256d sum_vec = _mm256_add_pd(curr_vec1, curr_vec2);
                 sum_vec = _mm256_add_pd(sum_vec, curr_vec3);
                 sum_vec = _mm256_add_pd(sum_vec, curr_vec4);
@@ -265,9 +245,11 @@ void poisson_iteration_inner_slice_SIMD(int N, double* source, double* curr, dou
                 sum_vec = _mm256_sub_pd(sum_vec, _mm256_mul_pd(delta_vec, source_vec));
                 sum_vec = _mm256_div_pd(sum_vec, six_vec);
 
+                // Store result in 'next'
                 _mm256_storeu_pd(&next[intex_SIMD(N, k, j, i)], sum_vec);
             }
 
+            // Scalar cleanup for remaining elements (if any)
             for (; i < i_end; i++) {
                 next[intex_SIMD(N, k, j, i)] = (curr[intex_SIMD(N, k, j, i + 1)] +
                                                  curr[intex_SIMD(N, k, j, i - 1)] +
