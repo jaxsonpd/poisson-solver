@@ -50,9 +50,11 @@ def plot_results(filenames: List[str], labels: List[str], plot_type: str = "time
 
 
 if __name__ == "__main__":
-    figure = plot_results(["./Compilier-Opt/JPC_03_mn901_i300_t20.csv", 
-                           "./CUDA-cmp/gpu_mn601_i300_t1.csv"],
-                           ["Intel 12400F CPU -O3", "NVIDIA 3070 Ti Mobile GPU"], plot_type="time")
+    figure = plot_results(["./JPC_JKI00_mn601_i300_t20.csv", 
+                           "./JPC_KIJ00_mn901_i300_t20.csv", 
+                           "./JPC_KJI00_mn901_i300_t20.csv",
+                           "./JPC_IKJ00_mn601_i300_t20.csv"],
+                           ["j, k, i", "k, i, j", "k, j, i", "i, k, j"])
 
-    figure.savefig("JPC_CPU_Razer_GPU.png")
+    figure.savefig("JPC_caching_cmp.png")
     plt.show()
