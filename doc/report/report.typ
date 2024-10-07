@@ -172,8 +172,11 @@ In earlier iterations of the program, the Von Neumann boundary was called at eve
 Another example of profiling helping in the optimisation of code is the barrier wait that is used to synchronise the threads. Originally the team hypothesised that these waits would greatly increase the execution time as threads take different amounts of time to complete due to CPU allocation and the way the cube nodes are divided amongst them. By profiling the code with these barriers implemented it was discovered as can be seen in #ref(<tab:non-optimised-profile>) that the barrier wait does not add any appreciable execution time and in the optimised version of the code seen in #ref(<tab:optimised-profile>) is even expanded out of its function and executed in the code itself with no function call overhead. Without profiling this would have been much harder to identify.
  
 #pagebreak()
-= Compiler Optimisation - easy 
+= Compiler Optimisation 
 
+Modern compilers, particularly for the C Programming Language, are extremely well optimised for general use. This makes it near-impossible for a programmer to "beat" the performance of compiler-generate assembly code. Compiler optimisation modifies the standard operation of a compiler to produce assembly code that is optimised for some specific purpose, usually execution time or program size. These optimisations result in tradeoffs. For example, a program optimised for execution speed may be significantly larger than an unoptimised program. Because of this, compiler optimisation are disabled by default, and are enabled using compiler flags.
+
+There are a number
 #figure(
   image("figures/JPC_optimisation_cmp.png", width: 60%),
   caption: [
