@@ -105,9 +105,9 @@ The results of the multithreading implementation can be seen in #ref(<fig:thread
 
 The Poisson algorithm requires a large number of memory operations to load the data from the respective arrays and store the result. These memory operations can add significant overhead. This is because the read/write time of DRAM is significantly higher than the execution time of the CPU. Modern CPUs minimise this impact with small high-speed memory caches. These store recently accessed data, minimising costly DRAM access operations. As discussed in Section 1, the largest cache on the analysed CPU is 16MB. This is not enough to store even one of the arrays needed for a 401 node cube which has a size of 515MB. This means the cache can only store small sections of memory. Optimising the use of cached memory improves cache utilisation, which can significantly improve program execution time.
 
-The largest number of memory operations in the code occurs during the computation of the inner nodes of the cube. This uses three nested `for` loops that iterate over the layers, columns, and rows. These iterations can be executed in any order to achieve the correct result. One way to ensure optimal cache utilisation is to consider spatial locality when accessing memory. This means that neighbouring data in memory will be accessed consecutively, so the required data will almost always be located in the cache for each node. To achieve this, the optimal iteration scheme is for the inner loop to iterate along the x-axis (a row), as it increments by a single item in memory each iteration. 
+The largest number of memory operations in the code occurs during the computation of the inner nodes of the cube. This uses three nested `for` loops that iterate over the layers, columns, and rows. These iterations can be executed in any order to achieve the correct result. One way to ensure optimal cache utilisation is to consider spatial locality when accessing memory. This means that neighbouring data in memory will be accessed consecutively, so the required data will almost always be located in the cache for each node. To achieve this, the optimal iteration scheme is for the inner loop to iterate along the i-axis (a row), as it increments by a single item in memory each iteration. 
 
-The performance for different iteration schemes is shown in @fig:caching-cmp. As seen in the plot, iteration schemes where the inner most loop is the x-axis outperform any other scheme by a significant margin. With the execution time being directly proportional to what iteration level the x-axis is performed. The difference in execution time is significant with the x, z, y iteration scheme being five times slower than the optimal z, y, x scheme. 
+The performance for different iteration schemes is shown in @fig:caching-cmp. As seen in the plot, iteration schemes where the inner most loop is the k-axis outperform any other scheme by a significant margin. With the execution time being directly proportional to what iteration level the x-axis is performed. The difference in execution time is significant with the i, k, j iteration scheme being five times slower than the optimal k, j, i scheme. 
 
 #figure(
   image("figures/JPC_caching_cmp.png", width: 60%),
@@ -116,7 +116,7 @@ The performance for different iteration schemes is shown in @fig:caching-cmp. As
   ],
 ) <fig:caching-cmp>
 
-The performance differences in iteration schemes can be explained by examining the number of cache misses occurring during execution. If the CPU needs to access data that is not in the cache, this is a miss, and the CPU must then read this data from DRAM which is significantly slower. @tab:cache-data compares the L1 cache read and write miss rates for the same program using the best (z, y, x) and worst (x, z, y) performing iteration schemes respectively. The total number of memory accesses is equal, but the optimal iteration method has approximately five times fewer misses, indicating significantly improved cache utilisation hence the lower execution time.
+The performance differences in iteration schemes can be explained by examining the number of cache misses occurring during execution. If the CPU needs to access data that is not in the cache, this is a miss, and the CPU must then read this data from DRAM which is significantly slower. @tab:cache-data compares the L1 cache read and write miss rates for the same program using the best (k, j, i) and worst (i, k, j) performing iteration schemes respectively. The total number of memory accesses is equal, but the optimal iteration method has approximately five times fewer misses, indicating significantly improved cache utilisation hence the lower execution time.
 
 #figure(
   caption: [Memory access cost at various cache levels for the AMD Ryzen 6900HX.],
@@ -152,7 +152,7 @@ Profiling was conducted on both optimised and non-optimised code to gain a holis
 )) <tab:non-optimised-profile>
 
 #figure(
-  caption: [GProf results for a Og optimised run of the program with 201 nodes 300 iterations and 30 threads.],
+  caption: [GProf results for a 0g optimised run of the program with 201 nodes 300 iterations and 30 threads.],
   table(
   columns: (35%, 20%, 15%, 25%),
   align: (left, center, center, center),
@@ -227,7 +227,19 @@ NVIDIA CUDA implementation of the poisson algorithm compared to optimal CPU solu
 #pagebreak()
 = Individual Topic 3 Daniel Hawes - SIMD
 
-Single Instruction, Multiple Data (SIMD) is a technique used to perform the same operation on multiple data points simulataneously. This is particularly useful in applications where the same operation is performed over large data sets, such as with large 3D arrays. 
+Single Instruction, Multiple Data (SIMD) is a technique used to perform the same operation on multiple data points simulataneously. This is particularly useful in applications where the same operation is performed over large data sets, such as with large 3D arrays. This section will discuss how SIMD can optimise the poisson algorithm. 
+SIMD uses the Advanced Vector Extension (AVX) instruction set. The results of the implementation are from tests on the AMD Ryzen 7 4700U CPU. 
+
+The AVX2 instruction set allows for 256-bit wide registers, which can hold 4x 64-bit double precision floating point numbers. This can be applied to the poisson algorithm by performing the same operation on 4 nodes simultaneously. The implementation of SIMD in the poisson algorithm calculates 4 nodes across the i dimension to solve for the following:
+$
+V_{i:i+4,j,k,n+1}
+$
+
+Between `i` and `i+4` we can load each node surrounding the calculated node into a vector. This results in 6 vectors holding values for the calculation. Since all the vectors will use the add operation, the add operation can be done simultaneously for the 4 nodes loaded in each register to another node. Hypothetically, there should be approximately a 4x increase on the inner slices of the cube since it can now calculate 4 nodes at once. 
+
+The results of the SIMD implementation can be seen in: (IMAGE).
+
+Despite the implementation of SIMD, the program is slower. This is likely due to the overhead of loading the data from their current registers into the vectors. The SIMD implementation doesn
 
 #pagebreak()
 #bibliography("bibliography.bib", title: "References", style: "institute-of-electrical-and-electronics-engineers")
