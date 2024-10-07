@@ -16,14 +16,17 @@ disassembly: poisson.s
 poisson.s: poisson
 	objdump -S --disassemble $< > $@
 
+poisson-o3: $(SOURCE)
+	$(CC) $(CFLAGS) -O3 $^ $(LDLIBS) -o $@
+
 poisson-profile: $(SOURCE)
 	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -o $@
 
 poisson-profile-o: $(SOURCE)
-	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -O3 -o $@
+	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -Og -o $@
 	
 poisson-cuda: poisson_cuda.cu cuda_worker.cu
-	nvcc $^ -o $@  
+	nvcc -O3 $^ -o $@  
 
 .PHONY: test
 test: poisson

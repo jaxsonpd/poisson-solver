@@ -41,10 +41,11 @@ def plot_results(filenames: List[str], labels: List[str], plot_type: str = "time
         plt.xlabel("Cube Size")
     
     plt.ylabel("Time (s)")
-    plt.xlim(0, None)
-    plt.ylim(0, None)
+    plt.xlim(1, None)
+    plt.ylim(1, None)
     plt.legend()  # Add a legend for the labels
-
+    plt.tight_layout()
+    
     return figure
 
 

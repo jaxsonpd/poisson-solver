@@ -69,15 +69,31 @@ AMD64 CPUs use the x86-64 instruction set architecture. This is an extension of 
 #pagebreak()
 = Multithreading - easy - Daniel
 
-Multithreading was used to separate the program from working on a single core to multiple. This was one of many ways for optimizing the CPU performance. Multithreading is achieved by separating the calculation across multiple worker threads. Each thread is responsible for computing a portion of the cube, divided across slices in the k dimension. 
+Multithreading was used to improve CPU utilisation this was done by separating the program from working on a single core to multiple. This is achieved by separating the Poisson calculation across multiple worker threads. Each thread is responsible for computing a portion of the cube, divided across slices in the k dimension. The start of a slice is calculated through a simple formula seen below:
 
-Each worker thread takes in: the cube size, pointers to the current and next buffer of the cube, the slice dimensions and the number of iterations. This information is passed through the `workerThread_t` structure. 
+$
+k_"start" = 1 + (i ceil((N-2)))/t
+$
 
-To ensure there is synchronization between iterations, a barrier is implemented. The barrier uses a `pthread_barrier_t` structure and is used as a counter that is incremented each time a thread reaches the end of it's calculations. When the counter reaches the number of threads, the barrier is lifted and the threads can continue with the next iteration. 
+Where $i$ is the thread number $N$ is the number of nodes and $t$ is the number of threads.  The end of a slice is calculated in a similar way as:
 
-After each thread completes it calculations for one iteration, the buffers for next and current need to be swapped. A temporary pointer is set up that points to where the current buffer is pointing. The pointer to the current buffer now points to what the next buffer is pointing to. The next buffer then points to the what the temporary pointer is pointing to. This process works to swap the buffers so that the next iteration can be calculated, without using any memory copying operations.
+$
+k_"end"= (i+1) ceil((N-2))/t + 1, k_"end" = cases(
+  N-1 &"if" k_"end" > N-1  \
+  k_"end" &"otherwise"
+)
+$
 
-The results of the multithreading implementation can be seen in (FIGURE). The results show that (Talk about results). 
+Each worker thread is passed the program variables (`curr`, `next` etc.) and the slice it is assigned, it then performs the required iterations applying Von Neumann and inner iterations where required. To prevent race conditions caused by parallel execution a barrier is used. The barrier uses a `pthread_barrier_t` with a limit equal to the number of the threads when all threads have completed an iteration and entered the barrier it lifts thus ensuring they are synchronised. After each thread completes its calculations for one iteration, the buffers for next and current need to be changed. This is done by swapping the pointers addresses which removes the need for expensive memory operations.
+
+The results of the multithreading implementation can be seen in #ref(<fig:thread-cmp>). The results show that as the number of threads is increased the execution time decreases. This is as expected as the program can make use of multiple cores in parallel. The solution reaches an execution time asymptote at approximately 20 threads after this point the execution time is near constant; However, the minimum times occur at 12 and 24 threads this is due to the processor that is being used to produce these results. These results were captured on a Intel i5 12500f processor which has 6 cores and 12 threads. The most common operation completed by the Poisson software is floating point arithmetic which requires a floating point unit. Two threads at a time can use the FPU as it takes time to load memory back and forth. But there is no additional benefit beyond this as the FPUs are saturated. Which is why the minimum value occurs at 12 threads.
+
+#figure(
+  image("figures/JPC_thread_cmp.png", width: 60%),
+  caption: [
+    A comparison of the poisson solver software execution times with different number of threads used
+  ],
+) <fig:thread-cmp>
 
 #pagebreak()
 = Cache - hard
@@ -109,39 +125,37 @@ The results of the multithreading implementation can be seen in (FIGURE). The re
 
 Profiling was used through-out all stages of this projects development to identify which areas of the program would benefit from optimisation. From these results optimisations where made to the code to reduce execution time. When selecting areas of the code to optimise the sections called most often were prioritised as these give a larger performance benefit than optimising slower less frequent functions. To make profiling easier the various components of the code where compartmentalised into functions, while this does add some execution time (due to stack overheads) it allows the profiling tool gprof to provide more granular results. 
 
-Profiling was conducted on both optimised and non-optimised code to gain a wholistic understanding of the programs execution. A breakdown of the execution times and call counts for a non-optimised run of the program with a 201 node cube over 300 iterations using 20 threads can be seen in #ref(<tab:non-optimised-profile>). The result of profiling using final optimisation parameters (-03) on the same cube size as before can be found in #ref(<tab:optimised-profile>).
+Profiling was conducted on both optimised and non-optimised code to gain a wholistic understanding of the programs execution. A breakdown of the execution times and call counts for a non-optimised run of the program with a 201 node cube over 300 iterations using 20 threads can be seen in #ref(<tab:non-optimised-profile>). The result of profiling using debug optimisation (-0g) on the same cube size as before can be found in #ref(<tab:optimised-profile>). 
 
 #figure(
   caption: [GProf results for a non-optimised run of the program with 201 nodes 300 iterations and 30 threads.],
   table(
-  columns: (35%, 15%, 25%),
-  align: (left, center, center),
-  table.header([Function], [Call Count], [Time per call (ms)]),
+  columns: (35%, 20%, 15%, 25%),
+  align: (left, center, center, center),
+  table.header([Function], [Percentage], [Call Count], [Time per call (ms)]),
   table.hline(stroke: 1pt),
-  [`poisson_iteration_inner_slice`], [5965], [1.25],
-  [`memcopy_3D`], [5977], [0.61],
-  [`apply_von_neuman_boundary_slice`], [5956], [0.05],
-  [Barrier waits cumulative], [11945], [0],
-  [Setup], [0], [0],
+  [`poisson_iteration_inner_slice`], [96.47%], [2251], [24.05],
+  [`apply_von_neuman_boundary_slice`], [3.53%], [2222], [0.91],
+  [`wait_to_copy`], [0%], [2400], [0],
+  [Setup], [0%], [1], [0],
   table.hline(stroke: 1pt),
 )) <tab:non-optimised-profile>
 
 #figure(
-  caption: [GProf results for a O3 optimised run of the program with 201 nodes 300 iterations and 30 threads.],
+  caption: [GProf results for a Og optimised run of the program with 201 nodes 300 iterations and 30 threads.],
   table(
-  columns: (35%, 15%, 25%),
-  align: (left, center, center),
-  table.header([Function], [Call Count], [Time per call (us)]),
+  columns: (35%, 20%, 15%, 25%),
+  align: (left, center, center, center),
+  table.header([Function], [Percentage], [Call Count], [Call Time (ms)]),
   table.hline(stroke: 1pt),
-  [`poisson_iteration_inner_slice`], [5958], [676.40 ],
-  [`memcopy_3D`], [5971], [410.32 ],
-  [`apply_von_neuman_boundary_slice`], [5926], [37.12],
-  [Barrier waits cumulative], [N/A], [N/A],
-  [Setup], [0], [0],
+  [`poisson_iteration_inner_slice`], [93.45%], [2269], [11.45],
+  [`apply_von_neuman_boundary_slice`], [6.55%], [2275], [0.80],
+  [Barrier waits cumulative], [0%], [2389], [0],
+  [Setup], [0%], [1], [0],
   table.hline(stroke: 1pt),
 )) <tab:optimised-profile>
 
-The results found in #ref(<tab:non-optimised-profile>) and #ref(<tab:optimised-profile>, supplement: "") show that in both runs the largest time cost is the iteration over the inner slice of the cube. This is expected as it performs the majority of the floating point operations in the software. The next highest execution time is the application of the Von Neumann boundary. 
+The results found in #ref(<tab:non-optimised-profile>) and #ref(<tab:optimised-profile>, supplement: "") show that in both runs the largest time cost is the iteration over the inner slice of the cube. This is expected as it performs the majority of the floating point operations in the software. As expected the compiler optimisations have reduced the iteration time by more than half. Interestingly the Von Neumann boundary condition execution time was only reduced by 12%. This may be due to the significant number conditional checks required by this function which cannot be optimised out.  
 
 In earlier iterations of the program the Von Neumann boundary was called at every inner loop of the main poisson iteration. Based on profiling the team was able to identify this as a bottle neck as it is un-necessary to call this for all if the inner nodes and move the updates to its own self contained iteration that only iterates over the outside nodes. Reducing the number of conditional checks needed thus reducing the execution time as there are less instructions per iteration.
 
@@ -166,7 +180,7 @@ In the poission iteration software there are several control hazards caused by c
 
 The reason our implementation required so many conditional instructions is that we use the same nested `for` loop to iterate over both the Von Neumann boundary (the dircilc boundary can be applied once during initialisation) and the inner nodes of the cube. It was hypothesised that moving these out of the same loop and reducing the Von Neumann iteration to only over the outer nodes would reduce the number of condition branch control hazards per iteration and thus overall. This was achieved by splitting each iteration into to components first the Von Neumann boundary is applied to only the nodes required then the nested loop only updated the inner nodes. This change completely removed the conditional instructions in the main iteration loop (which is called most often) removing the largest control hazard from the program. 
 
-The a comparison of the old program with conditional control hazards and without can be seen in #ref(<fig:conditional-branch-cmp>). This figure shows that the programs execution has been reduced by $10%$. With the real benefits occur at the large cube sizes as the more iterations mean more conditional branch issues. This result is expected as by reducing the number of conditional branches the CPU can optimise use of pipelining as the number of possible pipeline flushes is reduced. This change also has the added benefit of reducing the number of instructions per iteration. This is due to the Von Neumann boundary application only iterating over nodes that will need to be applied to as opposed to all nodes in the cube.
+The a comparison of the software with and without conditional control hazards can be seen in #ref(<fig:conditional-branch-cmp>). This shows that the programs execution has been reduced by $10%$. With the real benefits occurring at larger cube sizes as the more iterations mean more conditional branch issues. This result is expected as by reducing the number of conditional branches the CPU can optimise use of pipelining as the number of possible pipeline flushes is reduced. This change also has the added benefit of reducing the number of instructions per iteration. This is due to the Von Neumann boundary application only iterating over nodes that it will need to be applied to as opposed to all nodes in the cube. Crucially this gap still appears when optimisation is applied showing that the problem cannot be solved by the complier.
 
 #figure(
   image("figures/JPC_branch_predict_cmp.png", width: 60%),
@@ -177,9 +191,7 @@ The a comparison of the old program with conditional control hazards and without
 
 #pagebreak()
 = Individual Topic 2 Isaac Cone - GPU
-Graphics Processing Units (GPUs) are specialised hardware with many processing optimised for performing repeated operations. GPUs are significantly faster than CPUs in some applications due to massively parallel execution, a much higher memory bandwidth, and greater instruction throughput. GPUs are useful across a range of domains including artificial intelligence and modelling complex real-world phenomena such as weather. This section will discuss how a GPU, specifically NVIDIA 3070 Ti laptop GPU, can be leveraged to enhance the performance of the poisson algorithm.
-
-NVIDIA GPU hardware can execute any user-defined operation using the Compute Unified Device Architecture (CUDA) API @nvidia_cuda_guide. 3070 Ti CUDA architecture consists of 48 Streaming Multiprocessors (SM) each with 128 CUDA cores, as shown in @fig:nvidia-gpu. These CUDA cores can each run up to eight threads. The CUDA API is configured to execute the kernel with a set number of blocks, which are allocated one to each SM, and a number of threads per block. The API automatically handles the allocation of computation to these threads. The poisson iterations are ideal for GPU computation, so it is expected that the 3070 Ti with 6144 CUDA cores will significantly outperform a CPU.
+Graphics Processing Units (GPUs) are specialised hardware with many processing optimised for performing repeated operations. GPUs are significantly faster than CPUs in some applications due to massively parallel execution, a much higher memory bandwidth, and greater instruction throughput. This section will discuss how a GPU, specifically NVIDIA 3070 Ti laptop GPU, can be leveraged to enhance the performance of the poisson algorithm. The 3070 Ti architecture shown in @fig:nvidia-gpu consists of 48 Streaming Multiprocessors (SM) each with 128 CUDA cores for a total of 6144 cores. These cores run up to eight threads each. The hardware executes a custom kernel function using the Compute Unified Device Architecture (CUDA) API @nvidia_cuda_guide. The API uses variably sized blocks of threads, and automatically handles allocation of threads and blocks to the hardware. The poisson algorithm involves a single repeated operation, making it ideal for implementation on the GPU. It is expected that the 3070 Ti, which has 6144 CUDA cores will significantly outperform a CPU, particularly on larger cube sizes.
 
 #figure(
   image("figures/gpu_diagram.png", width: 80%),
@@ -187,14 +199,16 @@ NVIDIA GPU hardware can execute any user-defined operation using the Compute Uni
 Multiprocessor and CUDA core architecture of the NVIDIA 3070 Ti GPU.  ],
 ) <fig:nvidia-gpu>
 
-To simplify CUDA implementation, the poisson algorithm was reduced to a single kernel function, meaning it is unoptimised for the CPU. To leverage the GPU memory bandwidth the data needed for computation is entirely copied into the GPU VRAM. A limitation was identified from doing so, as for larger cubes the 8GB of VRAM on the 3070 Ti is too small to hold all of the data without more advanced memory management. The implementation in this report uses \#BLKS blocks with \#THRDS each.
+To simplify CUDA implementation, the poisson algorithm was reduced to a single kernel function, no longer optimised for the CPU. To leverage the GPU VRAM bandwidth, computations are performed entirely in the GPU VRAM. This has the limitation that the data size cannot exceed the GPU VRAM capacity, 8GB in this case. For execution on the 3070 Ti, the threads per block was set to 512 in an 8 thread cube. The $"gridSize"$ cube of blocks is then dynamically sized for a given $N$ by @eq:grid-size.
 
-The GPU performance is compared to the optimal CPU result in @fig:cpu-vs-gpu. This shows the GPU reaches the same solution an order of magnitude faster, far outperforming any possible optimisations. The suspected VRAM limitations do impact results for cubes sized over 701. This is because the requried data for computation exceeds the 8GB of VRAM in the GPU. This would be avoided by using a GPU with more VRAM or by using memory management to segment the cube for copying in stages. The latter solution would introduce additional overhead however. Overall the GPU result is as expected.
+$ "gridSize" = (N + "blockSize" - 1)/"blockSize" $ <eq:grid-size>
+
+@fig:cpu-vs-gpu compares the CUDA program to the optimal CPU program. For a 101 cube, the CPU outperforms the GPU. This is because the overhead from copying to VRAM exceeds the benefit of increased thread count. As cube sizes grow, the GPU  significantly outperforms the CPU. This is because the advantage of massively parallel execution becomes more pronounced with more computations. Above a 601-sized cube, data use exceeds 8GB, preventing execution on the 3070 Ti. This memory limitation could be avoided by batching data into smaller sections, but this would add overhead. Additionally, as the CUDA program was written as a proof of concept without further optimisation, it is likely there are CUDA-specific optimisations that could realise significant performance improvements.
 
 #figure(
-  image("figures/cpu_versus_gpu.png", width: 60%),
+  image("figures/JPC_CPU_Razer_GPU.png", width: 50%),
   caption: [
-NEED TO REDO THIS FOR NICER PLOT (COMPARE TO BEST CPU ONE)  ],
+NVIDIA CUDA implementation of the poisson algorithm compared to optimal CPU solution.  ],
 ) <fig:cpu-vs-gpu>
 #pagebreak()
 = Individual Topic 3 Daniel Hawes - SIMD
