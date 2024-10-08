@@ -19,6 +19,9 @@ poisson.s: poisson
 poisson-o3: $(SOURCE)
 	$(CC) $(CFLAGS) -O3 $^ $(LDLIBS) -o $@
 
+poisson-o1: $(SOURCE)
+	$(CC) $(CFLAGS) -O1 $^ $(LDLIBS) -o $@
+
 poisson-profile: $(SOURCE)
 	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -o $@
 
