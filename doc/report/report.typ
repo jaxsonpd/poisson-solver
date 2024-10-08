@@ -45,27 +45,18 @@
   Group 13: Jack Duignan, Isaac Cone, Daniel Hawes
 ])
 
-The result across many cube sizes with 300 iterations and 20 threads is shown by #ref(<fig:complete-cube-run>).
-
-#figure(
-  image("figures/profile1-10-mn901-i300-t-20.png", width: 60%),
-  caption: [
-    A complete run of the firmware across all cube sizes with 300 iterations and 20 threads.
-  ],
-) <fig:complete-cube-run>
-#pagebreak()
 = Processor Architecture
 The Central Processing Unit (CPU) described in this section is the AMD Ryzen 9 6900HX. This is a high-performance mobile CPU based on a 6nm process node. Its eight identical cores have two threads each for a total of 16 processing units and use the AMD64 (x86-64) instruction set architecture. The overall CPU structure is shown in @fig:cpu_topo.
 
 #figure(
-  image("./figures/cpu_topology.png", width: 50%), 
+  image("./figures/cpu_topology.png", width: 40%), 
   caption: [Central Processing Unit (CPU) architecture for the x86-64 AMD Ryzen 9 6900HX.]
 )<fig:cpu_topo>
 
-As mentioned, the cores use the AMD64 architecture, shown in @fig:cpu_core @amd64_programmers_manual. Each core has several Functional Units (FUs). These include execution units such as Floating Point Units (FPUs), Arithmetic Logic Units (ALUs), memory units and I/O units for interfacing with the system. By having units specialised for various tasks, the core is able to achieve more than one instruction per clock cycle using pipelining. Each core supports multiple threads as not all functional units can be used simultaneously for example one thread can perform memory access, while the other completes a floating point operation. This is not as performant as two separate cores running a single thread but does provide an increase over a single thread.
+As mentioned, the cores use the AMD64 architecture, shown in @fig:cpu_core @amd64_programmers_manual. Each core has several Functional Units (FUs). These include execution units such as Floating Point Units (FPUs), Arithmetic Logic Units (ALUs), memory units and I/O units for interfacing with the system. By having units specialised for various tasks, the core is able to achieve more than one instruction per clock cycle using pipelining. Each core supports multiple threads as not all functional units can be used simultaneously for example one thread can perform memory access, while the other completes a floating point operation. This is not as performant as two separate cores but does provide an increase over a single thread.
 
 #figure(
-  image("./figures/core_diagram.png", width: 80%), caption: [Typical AMD64 core architecture.]
+  image("./figures/core_diagram.png", width: 60%), caption: [Typical AMD64 core architecture.]
 )<fig:cpu_core>
 
 The computer has 15GB of available DRAM which is used for storage of volatile memory. As DRAM is comparatively slow inside the CPU, there are multiple levels of higher-speed cache memory which implement a modified Harvard architecture. This cache is split into three layers: the CPU has a shared 16MB L3 cache across all eight cores. Then each core has its own 512 kB L2 Cache and 32kB L1 data and instruction caches. This caching allows both data and instructions to be read in parallel from the shared address space, improving efficiency. Caching is important as shown in @tab:cache-data, where the instructions to access data in the different memory levels grow rapidly.
@@ -73,7 +64,7 @@ The computer has 15GB of available DRAM which is used for storage of volatile me
 AMD64 CPUs use the x86-64 instruction set architecture developed by Intel. This is an extension of the ubiquitous x86 architecture that introduces a 64-bit bus while retaining backwards compatibility. The use of a 64-bit architecture allows for much higher addresses of RAM to be read, theoretically up to four exabytes. The x86-64 architecture also has 64-bit general-purpose registers and support for more complicated instructions that allow for more efficient operations on specific data types. An example of this is the Single Instruction Multiple Data (SIMD) instructions that allow operation on vector data instead of single memory address.
 
 #pagebreak()
-= Multithreading - easy - Daniel
+= Multithreading
 
 Multithreading was used throughout this project to improve CPU utilisation this was done by separating the program from working on a single core to multiple. This is achieved by separating the Poisson algorithm across multiple worker threads. Each thread is responsible for computing a portion of the cube, divided across slices in the k dimension. The start of a slice is calculated through a simple formula seen below:
 $
@@ -101,13 +92,13 @@ The results of the multithreading implementation can be seen in #ref(<fig:thread
 ) <fig:thread-cmp>
 
 #pagebreak()
-= Cache - hard
+= Caching
 
 The Poisson algorithm requires a large number of memory operations to load the data from the respective arrays and store the result. These memory operations can add significant overhead. This is because the read/write time of DRAM is significantly higher than the execution time of the CPU. Modern CPUs minimise this impact with small high-speed memory caches. These store recently accessed data, minimising costly DRAM access operations. As discussed in Section 1, the largest cache on the analysed CPU is 16MB. This is not enough to store even one of the arrays needed for a 401 node cube which has a size of 515MB. This means the cache can only store small sections of memory. Optimising the use of cached memory improves cache utilisation, which can significantly improve program execution time.
 
 The largest number of memory operations in the code occurs during the computation of the inner nodes of the cube. This uses three nested `for` loops that iterate over the layers, columns, and rows. These iterations can be executed in any order to achieve the correct result. One way to ensure optimal cache utilisation is to consider spatial locality when accessing memory. This means that neighbouring data in memory will be accessed consecutively, so the required data will almost always be located in the cache for each node. To achieve this, the optimal iteration scheme is for the inner loop to iterate along the i-axis (a row), as it increments by a single item in memory each iteration. 
 
-The performance for different iteration schemes is shown in @fig:caching-cmp. As seen in the plot, iteration schemes where the inner most loop is the k-axis outperform any other scheme by a significant margin. With the execution time being directly proportional to what iteration level the x-axis is performed. The difference in execution time is significant with the i, k, j iteration scheme being five times slower than the optimal k, j, i scheme. 
+The performance for different iteration schemes is shown in @fig:caching-cmp. As seen in the plot, iteration schemes where the inner most loop is the k-axis outperform any other scheme by a significant margin. With the execution time being directly proportional to what iteration level the x-axis is performed. The i, k, j iteration scheme is five times slower than the optimal k, j, i scheme. 
 
 #figure(
   image("figures/JPC_caching_cmp.png", width: 60%),
@@ -131,11 +122,11 @@ The performance differences in iteration schemes can be explained by examining t
 )) <tab:cache-data>
 
 #pagebreak()
-= Profiling - easy - Jack
+= Profiling
 
 Profiling was used throughout all stages of this project's development to identify which areas of the program would benefit from optimisation. From these results, optimisations were made to the code to reduce execution time. When selecting areas of the code to optimise the sections called most often were prioritised as these give a larger performance benefit than optimising slower less frequent functions. To make profiling easier the various components of the code were compartmentalised into functions, while this does add some execution time (due to stack overheads) it allows the profiling tool gprof to provide more granular results. 
 
-Profiling was conducted on both optimised and non-optimised code to gain a holistic understanding of the program's execution. A breakdown of the execution times and call counts for a non-optimised run of the program with a 201-node cube over 300 iterations using 20 threads can be seen in #ref(<tab:non-optimised-profile>). The result of profiling using debug optimisation (-0g) on the same cube size as before can be found in #ref(<tab:optimised-profile>). 
+Profiling was conducted on both optimised and non-optimised code to gain a holistic understanding of the program's execution. A breakdown of the execution times and call counts for a non-optimised run of the program with a 201-node cube over 300 iterations using 20 threads can be seen in #ref(<tab:non-optimised-profile>). The result of profiling using debug optimisation (-Og) on the same cube size as before can be found in #ref(<tab:optimised-profile>). 
 
 #figure(
   caption: [GProf results for a non-optimised run of the program with 201 nodes 300 iterations and 30 threads.],
@@ -176,11 +167,35 @@ Another example of profiling helping in the optimisation of code is the barrier 
 
 Modern compilers, particularly for the C Programming Language, are extremely well optimised for general use. This makes it near-impossible for a programmer to "beat" the performance of compiler-generate assembly code. Compiler optimisation modifies the standard operation of a compiler to produce assembly code that is optimised for some specific purpose, usually execution time or program size. These optimisations result in tradeoffs. For example, a program optimised for execution speed may be significantly larger than an unoptimised program. Because of this, compiler optimisation are disabled by default, and are enabled using compiler flags.
 
-There are a number
+// The GNU Compiler Collection (GCC) has a number of different compiler optimisation flags:
+// - *-O0*: is the default, with no additional optimisation applied.
+// - *-O1*: optimises for both performance and program size without increasing compilation time.
+// - *-O2*: optimises for both performance and program size with no regard for compilation time.
+// - *-O3*: optimises for performance with no regard for compilation time or program size.
+// - *-Ofast*: in addition to O3 allows for fast math operations that can limit numerical precision
+
+The compiler flags are designed to enable a range of specific optimisations, and are organised to focus on different optimisation strategies.
+#figure(
+  caption: [The impact of optimisation flags on the program size of the Poisson algorithm implementation.],
+  table(
+  columns: (20%, 60%, 15%),
+  align: (center, left, center),
+  table.header([Flag], [Optimisation Strategy], [Size (kB)]),
+  table.hline(stroke: 1pt),
+  [-O0], [no optimisation performed], [68.0],
+  [-O1], [performance/size without adding compilation time], [54.5],
+  [-O2], [performance/size, can increase compilation time], [54.3],
+  [-O3], [performance, can increase size and compilation time], [51.4],
+  [-Ofast], [performance, impacts size, compilation time, and precision], [67.9],
+  [-Os], [optimise for size over all other factors], [45.8],
+  table.hline(stroke: 1pt),
+)) <tab:compiler-optimisations>
+
+
 #figure(
   image("figures/JPC_optimisation_cmp.png", width: 60%),
   caption: [
-    A comparison of the poisson solver software execution times with different compiler optimisations.
+    Comparing a range of performance optimisation options for the Poisson algorithm.
   ],
 ) <fig:optimisation-cmp>
 
