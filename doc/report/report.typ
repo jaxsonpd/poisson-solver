@@ -1,12 +1,12 @@
 #set document(
   title: [ENCE464 T2 Poisson Assignment Group 13],
-  author: "Jack Duignan",
+  author: "Jack Duignan, Isaac Cone, Daniel Hawes",
   date: auto
 )
 
 #set page(
   paper: "a4",
-  margin: (x: 1.8cm, y:1.5cm)
+  margin: (x: 1.8cm, y:1.5cm) // Technically we don't meet the requirements.
 )
 
 #set text(
@@ -174,7 +174,7 @@ Modern compilers, particularly for the C Programming Language, are extremely wel
 // - *-O3*: optimises for performance with no regard for compilation time or program size.
 // - *-Ofast*: in addition to O3 allows for fast math operations that can limit numerical precision
 
-The compiler flags are designed to enable a range of specific optimisations, and are organised to focus on different optimisation strategies.
+The compiler flags are designed to enable a range of specific optimisations, and are organised to focus on different optimisation strategies. The flags, their strategies, and the resulting file size for the compiled Poisson algorithm implementation are sumarrised in @tab:compiler-optimisations.
 #figure(
   caption: [The impact of optimisation flags on the program size of the Poisson algorithm implementation.],
   table(
@@ -191,6 +191,7 @@ The compiler flags are designed to enable a range of specific optimisations, and
   table.hline(stroke: 1pt),
 )) <tab:compiler-optimisations>
 
+Each of the optimisation strategies was applied to the Poisson algorithm implementation. Using program size to predict performance impacts, it is expected that all of the performance-focused optimisation methods will result in a shorter execution. The degree of improvement should theoretically increase as the methods become more focussed on performance with less regard for compile time or program size. The results for each method are compared in @fig:optimisation-cmp. 
 
 #figure(
   image("figures/JPC_optimisation_cmp.png", width: 60%),
@@ -198,9 +199,10 @@ The compiler flags are designed to enable a range of specific optimisations, and
     Comparing a range of performance optimisation options for the Poisson algorithm.
   ],
 ) <fig:optimisation-cmp>
+The results show that any performance optimising method makes a significant difference to execution time, particularly at larger cube sizes. What was not expected is that all optimisation methods perform approximately equally. This means that the additional space-intensive optimisations enabled by -O3 are not able to be applied to the Poisson algorithm. One reason for this is that the size of the main loops of the program are defined at runtime, preventing compiler loop unrolling. Additionally, it is likely the compiler is unable to make much optimisation to the parallel thread architecture.
 
 #pagebreak()
-= Individual Topic 1 Jack Duignan - Branch Prediction
+= Individual Topic 1: Branch Prediction (Jack Duignan)
 
 Execution on a CPU is optimised using pipelining which allows a single clock cycle single instruction execution. It does this by loading the next set of instructions while the previous instructions are being executed. When branch instructions occur a control hazard develops as the CPU cannot predict which set of instructions to load. This can cause costly pipeline flushes if the CPU loads the wrong. To attempt to mitigate the number of times this pipeline flush occurs the CPU predicts which way execution will go before the conditional branch is executed. This is branch prediction and is implemented in various ways across CPU architectures.
 
@@ -218,7 +220,7 @@ A comparison of the software with and without conditional control hazards can be
 ) <fig:conditional-branch-cmp>
 
 #pagebreak()
-= Individual Topic 2 Isaac Cone - GPU
+= Individual Topic 2: GPU Implementation (Isaac Cone)
 
 Graphics Processing Units (GPUs) are specialised hardware with many processing optimised for performing repeated operations. GPUs are significantly faster than CPUs in some applications due to massively parallel execution, a much higher memory bandwidth, and greater instruction throughput. This section will discuss how a GPU, specifically NVIDIA 3070 Ti laptop GPU, can be leveraged to enhance the performance of the Poisson algorithm. The 3070 Ti architecture shown in @fig:nvidia-gpu consists of 48 Streaming Multiprocessors (SM) each with 128 CUDA cores for a total of 6144 cores. These cores run up to eight threads each. The hardware executes a custom kernel function using the Compute Unified Device Architecture (CUDA) API @nvidia_cuda_guide. The API uses variably sized blocks of threads and automatically handles the allocation of threads and blocks to the hardware. The poisson algorithm involves a single repeated operation, making it ideal for implementation on the GPU. It is expected that the 3070 Ti, which has 6144 CUDA cores will significantly outperform a CPU, particularly on larger cube sizes.
 
@@ -240,7 +242,7 @@ $ "gridSize" = (N + "blockSize" - 1)/"blockSize" $ <eq:grid-size>
 NVIDIA CUDA implementation of the poisson algorithm compared to optimal CPU solution.  ],
 ) <fig:cpu-vs-gpu>
 #pagebreak()
-= Individual Topic 3 Daniel Hawes - SIMD
+= Individual Topic 3: SIMD Implementation (Daniel Hawes)
 
 Single Instruction, Multiple Data (SIMD) is a technique used to perform the same operation on multiple data points simulataneously. This is particularly useful in applications where the same operation is performed over large data sets, such as with large 3D arrays. This section will discuss how SIMD can optimise the poisson algorithm. 
 SIMD uses the Advanced Vector Extension (AVX) instruction set. The results of the implementation are from tests on the AMD Ryzen 7 4700U CPU. 
