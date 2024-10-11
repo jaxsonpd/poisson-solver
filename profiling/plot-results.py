@@ -50,11 +50,9 @@ def plot_results(filenames: List[str], labels: List[str], plot_type: str = "time
 
 
 if __name__ == "__main__":
-    figure = plot_results(["./JPC_JKI00_mn601_i300_t20.csv", 
-                           "./JPC_KIJ00_mn901_i300_t20.csv", 
-                           "./JPC_KJI00_mn901_i300_t20.csv",
-                           "./JPC_IKJ00_mn601_i300_t20.csv"],
-                           ["j, k, i", "k, i, j", "k, j, i", "i, k, j"])
+    figure = plot_results(["./profiling/SIMD_Daniel_mn601_i300_t1.csv", 
+                           "./profiling/no_SIMD_Daniel_mn601_i300_t1.csv"],
+                           ["SIMD", "No SIMD"])
 
-    figure.savefig("JPC_caching_cmp.png")
+    figure.savefig("Dan_SIMD_cmp.png")
     plt.show()

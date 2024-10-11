@@ -13,6 +13,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include <immintrin.h>
+
 /**
  * @brief Apply the dirlect boundary conditions to the top and bottom of the
  * cube
@@ -72,17 +74,4 @@ void poisson_iteration_slow(int N, double* source, double* curr, double* next, f
  * @param slice_3D The slice of data to perform it on
  */
 void poisson_iteration_inner_slice_SIMD(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D);
-
-/**
- * @brief Perform one iteration of the poisson equation using SIMD for half as many vectors 
- *
- * @param N the size of the array
- * @param source Pointer to the source term
- * @param curr Pointer to the current array
- * @param next Pointer to the next array (to update)
- * @param delta The delta
- * @param slice_3D The slice of data to perform it on
- */
-void poisson_iteration_inner_slice_SIMD_half(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D);
-
 #endif // POISSON_ITER_H
