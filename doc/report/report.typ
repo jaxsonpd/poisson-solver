@@ -234,12 +234,19 @@ The AVX2 instruction set allows for 256-bit wide registers, which can hold 4x 64
 $
 V_{i:i+4,j,k,n+1}
 $
+A calculation is manually performed at the end of the calculation if the inner slice is not divisble by 4 to finish off the remaining nodes in the i dimention. 
 
-Between `i` and `i+4` we can load each node surrounding the calculated node into a vector register. This results in 6 different vector registers holding values for the calculation. Since all the vectors will use the add operation, the add operation can be done simultaneously for the 4 nodes loaded in each register. We can hypothesise that there should be approximately a 4x increase on the inner slices of the cube since it can now calculate 4 nodes at once. 
+Between `i` and `i+4` we can load each node surrounding the calculated node into a vector register. This results in 6 different vector registers holding values for the calculation. Since all the vectors will use the add operation, the add operation can be done simultaneously for the 4 nodes loaded in each register. We can hypothesise that there should be approximately a 4x increase on the inner slices of the cube since it can now calculate 4 nodes at once. With this hypothesis in mind, the results of the SIMD implementation can be seen in #ref(<fig:SIMD-comparison>). These results come from SIMD only implemented in the inner slice calculation since SIMD is only very useful when the same operation is performed on multiple data points multiple times. 
 
-The results of the SIMD implementation can be seen in: (IMAGE).
+#figure(
+  image("figures/SIMD_cmp.png", width: 50%),
+  caption: [
+Comparison with SIMD implemented in the inner slice and without SIMD.  ],
+) <fig:SIMD-comparison>
 
-The results show that despite the implementation of SIMD in the inner slice layers, the execution time is decreased. Based on SIMD principles, this conclusion doesn't seem correct, so after profiling the SIMD functions it was discovered that the increase in speed is due to the loading of vector registers. Since in the normal calculation we can take the numbers directly from memory and perform the calculation this makes it more efficient to SIMD, as SIMD needs to load the numbers from memory into new vector registers to perform the calculation. Profiling indicated that this memory load step took 49.58% of the CPU time for the calculation. 
+The results show that despite the implementation of SIMD in the inner slice layers, the execution time is decreased. Based on SIMD principles, this conclusion doesn't seem correct, so after profiling the SIMD functions it was discovered that the increase in speed is due to the loading of vector registers. Since in the normal calculation we can take the numbers directly from memory and perform the calculation this makes it more efficient to SIMD, as SIMD needs to load the numbers from memory into new vector registers to perform the calculation. Profiling indicated that this memory load step took 49.58% of the CPU time for the calculation. The actual calculation step only takes 7.5% of the program time. So it's clear that the time from this SIMD implementation bottlenecks at the memory load step.
+
+It is clear that the principle of SIMD does same some clock cycles for the execution of the calculation, but the time taken to set up the calculation is longer than the time saved from doing it normally. Thus, the SIMD implementation was not included in the final poisson code. 
 
 #pagebreak()
 #bibliography("bibliography.bib", title: "References", style: "institute-of-electrical-and-electronics-engineers")

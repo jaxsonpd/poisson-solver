@@ -63,22 +63,6 @@ void poisson_iteration_inner_slice(int N, double* source, double* curr, double* 
  */
 void poisson_iteration_slow(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D);
 
-
-void SIMD_Load_registers(double* curr, double* source, int N, int k, int j, int i, __m256d* curr_vec1, __m256d* curr_vec2, __m256d* curr_vec3, __m256d* curr_vec4, __m256d* curr_vec5, __m256d* curr_vec6, __m256d* source_vec);
-void SIMD_Add_registers(__m256d* sum_vec, __m256d curr_vec1, __m256d curr_vec2, __m256d curr_vec3, __m256d curr_vec4, __m256d curr_vec5, __m256d curr_vec6, __m256d delta_vec, __m256d source_vec, __m256d six_vec);
-void SIMD_Store_registers(double* next, int N, int k, int j, int i, __m256d sum_vec);
-/**
- * @brief Perform one iteration of the poisson equation using SIMD
- *
- * @param N the size of the array
- * @param source Pointer to the source term
- * @param curr Pointer to the current array
- * @param next Pointer to the next array (to update)
- * @param delta The delta
- * @param slice_3D The slice of data to perform it on
- */
-void poisson_iteration_inner_slice_SIMD_Profiling(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D);
-
 /**
  * @brief Perform one iteration of the poisson equation using SIMD
  *
