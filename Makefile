@@ -20,7 +20,7 @@ poisson-o3: $(SOURCE)
 	$(CC) $(CFLAGS) -O3 $^ $(LDLIBS) -o $@
 
 poisson-profile: $(SOURCE)
-	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -o $@
+	$(CC) $(CFLAGS) -pg -fno-inline $^ $(LDLIBS) -o $@
 
 poisson-profile-o: $(SOURCE)
 	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -Og -o $@

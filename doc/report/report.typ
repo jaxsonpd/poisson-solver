@@ -227,7 +227,7 @@ NVIDIA CUDA implementation of the poisson algorithm compared to optimal CPU solu
 #pagebreak()
 = Individual Topic 3 Daniel Hawes - SIMD
 
-Single Instruction, Multiple Data (SIMD) is a technique used to perform the same operation on multiple data points simulataneously. This is particularly useful in applications where the same operation is performed over large data sets, such as with large 3D arrays. This section will discuss how SIMD can optimise the poisson algorithm. 
+Single Instruction, Multiple Data (SIMD) is a technique used to perform the same operation on multiple data points simulataneously. This is particularly useful in applications where the same operation is performed over large data sets, such as large 3D arrays. This section will discuss how SIMD can optimise the poisson algorithm. 
 SIMD uses the Advanced Vector Extension (AVX) instruction set. The results of the implementation are from tests on the AMD Ryzen 7 4700U CPU. 
 
 The AVX2 instruction set allows for 256-bit wide registers, which can hold 4x 64-bit double precision floating point numbers. This can be applied to the poisson algorithm by performing the same operation on 4 nodes simultaneously. The implementation of SIMD in the poisson algorithm calculates 4 nodes across the i dimension to solve for the following:
@@ -235,11 +235,11 @@ $
 V_{i:i+4,j,k,n+1}
 $
 
-Between `i` and `i+4` we can load each node surrounding the calculated node into a vector. This results in 6 vectors holding values for the calculation. Since all the vectors will use the add operation, the add operation can be done simultaneously for the 4 nodes loaded in each register to another node. Hypothetically, there should be approximately a 4x increase on the inner slices of the cube since it can now calculate 4 nodes at once. 
+Between `i` and `i+4` we can load each node surrounding the calculated node into a vector register. This results in 6 different vector registers holding values for the calculation. Since all the vectors will use the add operation, the add operation can be done simultaneously for the 4 nodes loaded in each register. We can hypothesise that there should be approximately a 4x increase on the inner slices of the cube since it can now calculate 4 nodes at once. 
 
 The results of the SIMD implementation can be seen in: (IMAGE).
 
-Despite the implementation of SIMD, the program is slower. This is likely due to the overhead of loading the data from their current registers into the vectors. The SIMD implementation doesn
+The results show that despite the implementation of SIMD in the inner slice layers, the execution time is decreased. Based on SIMD principles, this conclusion doesn't seem correct, so after profiling the SIMD functions it was discovered that the increase in speed is due to the loading of vector registers. Since in the normal calculation we can take the numbers directly from memory and perform the calculation this makes it more efficient to SIMD, as SIMD needs to load the numbers from memory into new vector registers to perform the calculation. Profiling indicated that this memory load step took 49.58% of the CPU time for the calculation. 
 
 #pagebreak()
 #bibliography("bibliography.bib", title: "References", style: "institute-of-electrical-and-electronics-engineers")
