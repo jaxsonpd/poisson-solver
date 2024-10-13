@@ -241,7 +241,7 @@ CUDA implementation of the poisson algorithm compared to optimal CPU solution.  
 #pagebreak()
 = Individual Topic 3: SIMD Implementation (Daniel Hawes)
 
-Single Instruction, Multiple Data (SIMD) is a technique used to perform the same operation on multiple data points simulataneously. This is particularly useful in applications where the same operation is performed over large data sets, such as large 3D arrays. This section will discuss how SIMD can optimise the poisson algorithm. 
+Single Instruction, Multiple Data (SIMD) is a technique used to perform the same operation on multiple data points simultaneously. This is particularly useful in applications where the same operation is performed over large data sets, such as large 3D arrays. This section will discuss how SIMD can optimise the poisson algorithm. 
 SIMD uses the Advanced Vector Extension (AVX) instruction set. The results of the implementation are from tests on the AMD Ryzen 7 4700U CPU. 
 
 The AVX2 instruction set allows for 256-bit wide registers to be used, which can hold four 64-bit double precision floating point numbers @SIMD_guide. This can be applied to the poisson algorithm by performing the same operation on 4 nodes simultaneously. This is done across four nodes in the i dimension.
