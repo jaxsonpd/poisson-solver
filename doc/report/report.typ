@@ -53,13 +53,13 @@ This section describes the AMD Ryzen 9 6900HX Central Processing Unit (CPU). Thi
   caption: [Central Processing Unit (CPU) architecture for the x86-64 AMD Ryzen 9 6900HX.]
 )<fig:cpu_topo>
 
-As mentioned, the cores use the AMD64 architecture, shown in @fig:cpu_core @amd64_programmers_manual. Each core has several Functional Units (FUs). These include execution units such as Floating Point Units (FPUs), Arithmetic Logic Units (ALUs), memory units and I/O units. By having units specialised for various tasks, the core is able to achieve more than one instruction per clock cycle using pipelining. Each core supports multiple threads as not all functional units can be used simultaneously for example one thread can perform memory access, while the other completes a floating point operation. This is not as performant as two separate cores but does provide an advantage over a single thread.
+The structure of an AMD64 architecture core is shown in @fig:cpu_core @amd64_programmers_manual. Each core has several Functional Units (FUs). These include execution units such as Floating Point Units (FPUs), Arithmetic Logic Units (ALUs), memory units and I/O units. By having units specialised for various tasks, the core is able to execute more than one instruction in parallel using pipelining. Each core supports multiple threads as not all functional units can be used simultaneously for example one thread can perform memory access, while the other completes a floating point operation. This is not as performant as two separate cores but does provide an advantage over a single thread.
 
 #figure(
   image("./figures/core_diagram.png", width: 60%), caption: [Typical AMD64 core architecture.]
 )<fig:cpu_core>
 
-The computer has 15GB of available DRAM which is used for storage of volatile memory. As DRAM slow to access there are multiple levels of higher-speed cache memory implementinga modified Harvard architecture. This cache is split into three layers: the CPU has a shared 16MB L3 cache across all eight cores. Then each core has its own 512 kB L2 Cache and 32kB L1 data and instruction caches. This caching allows both data and instructions to be read in parallel from the shared address space, improving efficiency. Caching is crucial to avoid repeated slow reads from memory.
+The computer has 15GB of available DRAM which is used for storage of volatile memory. As DRAM is slow to access there are multiple levels of higher-speed cache memory implementing a modified Harvard architecture. This cache is split into three layers: the CPU has a shared 16MB L3 cache across all eight cores. Then each core has its own 512 kB L2 cache and 32kB L1 data and instruction caches. This caching allows both data and instructions to be read in parallel from the shared address space, improving efficiency. Caching is crucial to avoid repeated slow reads from DRAM.
 
 AMD64 CPUs use the x86-64 instruction set architecture developed by Intel. This is an extension of the ubiquitous x86 architecture that introduces a 64-bit bus while retaining backwards compatibility. The use of a 64-bit architecture allows for much higher addresses of RAM to be read, theoretically up to four exabytes. The x86-64 architecture also has 64-bit general-purpose registers and support for more complicated instructions that allow for more efficient operations on specific data types. An example of this is the Single Instruction Multiple Data (SIMD) instructions that allow operation on vectors of data instead of a single value.
 
@@ -71,7 +71,7 @@ $
 k_"start" = 1 + (i ceil((N-2)))/t
 $
 
-Where $i$ is the thread number $N$ is the number of nodes and $t$ is the number of threads.  The end of a slice is calculated in a similar way as:
+Where $i$ is the thread number, $N$ is the number of nodes, and $t$ is the number of threads.  The end of a slice is calculated in a similar way as:
 
 $
 k_"end"= (i+1) ceil((N-2))/t + 1, k_"end" = cases(
@@ -82,7 +82,7 @@ $
 
 Each worker thread is passed the program variables (`curr`, `next` etc.) and the slice it is assigned. The Von Neumann and inner iterations are then applied as required. To prevent race conditions caused by parallel execution a barrier is used. This is a  `pthread_barrier_t` type with a limit equal to the number of worker threads. When all threads have completed an iteration and called the wait function, the barrier allows the program to proceed in sync. After each thread completes its calculations for one iteration, the buffers for the next and current iterations need to be changed. This is done by swapping the pointer addresses, avoiding the need for expensive memory copying operations.
 
-The results of the multithreading implementation can be seen in #ref(<fig:thread-cmp>). The results show that the execution time decreases as the number of threads is increased. This expected because the program can make use of multiple cores in parallel. The solution reaches an execution time asymptote at approximately 20 threads. After this point the execution time is near constant. The minimum execution time is reached by 12 threads. This is because the results are captured on an Intel i5 12400f processor which has 6 cores and 12 threads. The most common operation completed by the Poisson implementation is floating point arithmetic which requires a floating point unit to execute efficiently. Two threads are able to utilise a single FPU as it takes time to load memory back and forth. This means that the theoretical maximum number of threads that can complete floating-point operations simultaneously is 12 which is reflected in the minimum computational time value.
+The results of the multithreading implementation can be seen in #ref(<fig:thread-cmp>). The results show that the execution time decreases as the number of threads is increased. This expected because the program can make use of multiple cores in parallel. The minimum execution time is reached by 12 threads, after which the execution time is near constant. This is because the results are captured on an Intel i5 12400f processor which has 6 cores and 12 threads. The most common operation completed by the Poisson implementation is floating point arithmetic which requires a floating point unit to execute efficiently. Two threads are able to utilise a single FPU as it takes time to load memory back and forth. This means that the theoretical maximum number of threads that can complete floating-point operations simultaneously is 12 which is reflected in the minimum computational time value.
 
 #figure(
   image("figures/JPC_thread_cmp.png", width: 60%),
