@@ -46,7 +46,7 @@
 ])
 
 = Processor Architecture
-This section describes the AMD Ryzen 9 6900HX Central Processing Unit (CPU). This is a laptop CPU based on a 6nm process node. It has eight dual-thread cores for 16 processing units total. It uses the AMD64 (x86-64) instruction set architecture. The overall CPU structure is shown in @fig:cpu_topo.
+This section describes the AMD Ryzen 9 6900HX Central Processing Unit (CPU). This is a mobile CPU based on a 6nm process node. It has eight dual-thread cores for 16 processing units total. It uses the AMD64 (x86-64) instruction set architecture. The overall CPU structure is shown in @fig:cpu_topo.
 
 #figure(
   image("./figures/cpu_topology.png", width: 40%), 
