@@ -228,7 +228,7 @@ Graphics Processing Units (GPUs) are specialised processors with many cores opti
 Multiprocessor and CUDA core architecture of the NVIDIA 3070 Ti GPU.  ],
 ) <fig:nvidia-gpu>
 
-To simplify implementation, the Poisson algorithm was reduced to a single kernel function, no longer optimised. To leverage the GPU VRAM bandwidth, computations are performed entirely in the GPU VRAM. This has the limitation that the data size cannot exceed the GPU VRAM capacity, 8GB in this case. For execution on the 3070 Ti, the threads per block were set to 512 in an 8-thread cube. The $"gridSize"$ cube of blocks is then dynamically sized for a given $N$ by @eq:grid-size.
+To simplify implementation, the Poisson algorithm was reduced to a single kernel function, no longer optimised. To leverage the GPU VRAM bandwidth, computations are performed entirely in the GPU VRAM. This has the limitation that the data size cannot exceed the GPU VRAM capacity, 8GB in this case. For execution on the 3070 Ti, the threads per block were set to 512 in an 8-thread cube. The $"gridSize"$ cube of blocks is then dynamically sized based on cube size  $N$ by @eq:grid-size.
 
 $ "gridSize" = (N + "blockSize" - 1)\/"blockSize" $ <eq:grid-size>
 
