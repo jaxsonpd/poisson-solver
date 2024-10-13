@@ -18,35 +18,6 @@
 #define PRECISION double
 #define BLOCK_SIZE 8
 
-/**
- * poisson.c
- * Implementation of a Poisson solver with Dirichlet boundary conditions.
- *
- * This template handles the basic program launch, argument parsing, and memory
- * allocation required to implement the solver *at its most basic level*. You
- * will likely need to allocate more memory, add threading support, account for
- * cache locality, etc...
- *
- * BUILDING:
- * gcc -o poisson poisson.c -lpthread
- *
- * [note: linking pthread isn't strictly needed until you add your
- *        multithreading code]
- *
- * TODO:
- * 1 - Read through this example, understand what it does and what it gives you
- *     to work with.
- * 2 - Implement the basic algorithm and get a correct output.
- * 3 - Add a timer to track how long your execution takes.
- * 4 - Profile your solution and identify weaknesses.
- * 5 - Improve it!
- * 6 - Remember that this is now *your* code and *you* should modify it however
- *     needed to solve the assignment.
- *
- * See the lab notes for a guide on profiling and an introduction to
- * multithreading (see also threads.c which is reference by the lab notes).
- */
-
 extern char* optarg;
 
 // Global flag

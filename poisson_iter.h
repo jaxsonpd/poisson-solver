@@ -22,7 +22,7 @@
  * @param next the array to populate
  *
  */
-void apply_const_boundary(int N, double* next);
+void apply_const_boundary(int N, double* restrict next);
 
 
 /**
@@ -36,7 +36,7 @@ void apply_const_boundary(int N, double* next);
  * @param slice_3D The slice of data to perform it on
  *
  */
-void apply_von_neuman_boundary_slice(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D);
+void apply_von_neuman_boundary_slice(int N, double* restrict source, double* restrict curr, double* restrict next, float delta, slice3D_t slice_3D);
 
 /**
  * @brief Perform one iteration of the poisson equation only on the inner squares
@@ -49,7 +49,7 @@ void apply_von_neuman_boundary_slice(int N, double* source, double* curr, double
  * @param slice_3D The slice of data to perform it on
  *
  */
-void poisson_iteration_inner_slice(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D);
+void poisson_iteration_inner_slice(int N, double* restrict source, double* restrict curr, double* restrict next, float delta, slice3D_t slice_3D);
 
 /**
  * @brief Perform one interation of the poisson equation (without constant boundaries)
@@ -61,7 +61,7 @@ void poisson_iteration_inner_slice(int N, double* source, double* curr, double* 
  * @param delta The delta
  * @param slice_3D The slice of data to perform it on
  */
-void poisson_iteration_slow(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D);
+void poisson_iteration_slow(int N, double* restrict source, double* restrict curr, double* restrict next, float delta, slice3D_t slice_3D);
 
 /**
  * @brief Perform one iteration of the poisson equation using SIMD
@@ -73,5 +73,5 @@ void poisson_iteration_slow(int N, double* source, double* curr, double* next, f
  * @param delta The delta
  * @param slice_3D The slice of data to perform it on
  */
-void poisson_iteration_inner_slice_SIMD(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D);
+void poisson_iteration_inner_slice_SIMD(int N, double* restrict source, double* restrict curr, double* restrict next, float delta, slice3D_t slice_3D);
 #endif // POISSON_ITER_H
