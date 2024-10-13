@@ -41,7 +41,7 @@ typedef struct Slice3D {
 } slice3D_t;  
 
 /** 
- * @brief Copy a slice a three dimentional array
+ * @brief Copy a slice of three dimentional array
  * @param N the length of the cube
  * @param curr the current array
  * @param next the next array

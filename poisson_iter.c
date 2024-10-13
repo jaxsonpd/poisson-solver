@@ -15,7 +15,7 @@
 
 #include "poisson_iter.h"
 
-void apply_const_boundary(int N, double* next) {
+void apply_const_boundary(int N, double* restrict next) {
     for (int j = 0; j < N; j++) {
         for (int i = 0; i < N; i++) {
             idx(next, N, 0, j, i) = TOP_BOUNDARY_COND;
@@ -26,7 +26,7 @@ void apply_const_boundary(int N, double* next) {
 
 
 
-void apply_von_neuman_boundary_slice(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D) {
+void apply_von_neuman_boundary_slice(int N, double* restrict source, double* restrict curr, double* restrict next, float delta, slice3D_t slice_3D) {
     for (int k = slice_3D.k_start; k < slice_3D.k_end; k++) {
         if (slice_3D.j_start == 0 && slice_3D.i_start == 0) {
             idx(next, N, k, 0, 0) = (2 * idx(curr, N, k, 0, 0 + 1)
@@ -94,7 +94,7 @@ void apply_von_neuman_boundary_slice(int N, double* source, double* curr, double
     }
 }
 
-void poisson_iteration_inner_slice(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D) {
+void poisson_iteration_inner_slice(int N, double* restrict source, double* restrict curr, double* restrict next, float delta, slice3D_t slice_3D) {
     int j_start = slice_3D.j_start  != 0 ? slice_3D.j_start : 1;
     int j_end = slice_3D.j_end != N ? slice_3D.j_end : N-1;
 
@@ -113,7 +113,7 @@ void poisson_iteration_inner_slice(int N, double* source, double* curr, double* 
     }
 }
 
-void poisson_iteration_slow(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D) {
+void poisson_iteration_slow(int N, double* restrict source, double* restrict curr, double* restrict next, float delta, slice3D_t slice_3D) {
     for (int k = slice_3D.k_start; k < slice_3D.k_end; k++) {
         for (int j = slice_3D.j_start; j < slice_3D.j_end; j++) {
             for (int i = slice_3D.i_start; i < slice_3D.i_end; i++) {
@@ -173,7 +173,7 @@ int intex_SIMD(int N, int z, int y, int x) {
     return ((z * N) + y) * N + x;
 }
 
-void poisson_iteration_inner_slice_SIMD(int N, double* source, double* curr, double* next, float delta, slice3D_t slice_3D) {
+void poisson_iteration_inner_slice_SIMD(int N, double* restrict source, double* restrict curr, double* restrict next, float delta, slice3D_t slice_3D) {
     int j_start = slice_3D.j_start != 0 ? slice_3D.j_start : 1;
     int j_end = slice_3D.j_end != N ? slice_3D.j_end : N - 1;
 

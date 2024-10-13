@@ -28,12 +28,7 @@ void wait_to_copy(workerThread_t* worker_info) {
     pthread_barrier_wait(worker_info->barrier);
 }
 
-/**
- * @brief The worker thread function
- * @param pargs a WorkerThread_t pointer
- *
- * @return void*
- */
+
 void* worker_thread(void* pargs) {
     workerThread_t* worker_info = (workerThread_t*)pargs;
     int N = worker_info->N;
