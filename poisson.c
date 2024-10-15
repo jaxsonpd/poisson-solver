@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
     // Default settings for solver
     int iterations = 10;
     int n = 5;
-    int threads = 3;
+    int threads = 16;
     float delta = 1;
     int x = -1;
     int y = -1;
